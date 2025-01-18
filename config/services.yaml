@@ -19,6 +19,9 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: [ 'controller.service_arguments' ]
     App\Service\CameraManager:
         arguments:
             $configPath: '%kernel.project_dir%/config/video_config.json'

@@ -3,12 +3,12 @@
     {
       "title": "Garage",
       "videoFolder": "/var/www/html/videos/garage",
-      "type": "reolink"
+      "cameraType": "reolink"
     },
     {
       "title": "Garten",
       "videoFolder": "/var/www/html/videos/garten",
-      "type": "reolink"
+      "cameraType": "reolink"
     }
   ]
 }

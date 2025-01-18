@@ -14,11 +14,13 @@ class VideoFileManager implements VideoFileManagerInterface
     public function getVideos(Camera $camera): array
     {
         // TODO: Implement listVideos() method.
+        return [];
     }
 
     public function getVideoDetails(Video $video): array
     {
         // TODO: Implement getVideoDetails() method.
+        return [];
     }
 
     public function protectVideo(Video $video)

@@ -5,10 +5,11 @@ namespace App\Controller;
 use App\Entity\Video;
 use App\Service\CameraManager;
 use App\Service\VideoFileManager;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class VideoController
+class VideoController extends AbstractController
 {
     private CameraManager $cameraManager;
 
@@ -27,7 +28,9 @@ class VideoController
         foreach ($cameras as $camera){
             $videos = array_merge($videos, $this->videoFileManager->getVideos($camera));
         }
-        return new Response('test');
+        return $this->render('video/list.videos.html.twig', [
+            'videos' => $videos,
+        ]);
     }
 
     #[Route('/video/{uid}', name: 'show_video')]
