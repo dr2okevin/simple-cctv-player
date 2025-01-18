@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Video List</h1>
+
+    <ul>
+        {% for video in videos %}
+            <li>
+                <strong>Title:</strong> {{ video.title }}<br>
+                <strong>Path:</strong> {{ video.path }}<br>
+                <strong>Camera Type:</strong> {{ video.cameraType }}<br>
+
+                {% if video.recordTime is defined %}
+                    <strong>Recorded:</strong> {{ video.recordTime|date('Y-m-d H:i') }}<br>
+                {% endif %}
+
+                {% if video.size is not null %}
+                    <strong>Size:</strong> {{ video.size }} bytes<br>
+                {% endif %}
+
+                {% if video.duration is not null %}
+                    <strong>Duration:</strong> {{ video.duration }} sec<br>
+                {% endif %}
+
+                <strong>Protected:</strong> {{ video.isProtected ? 'Yes' : 'No' }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
