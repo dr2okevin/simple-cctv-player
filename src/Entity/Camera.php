@@ -45,7 +45,12 @@ class Camera
      */
     public function setVideoFolder(string $videoFolder): void
     {
-        $this->videoFolder = $videoFolder;
+        if($videoFolder !== '/'){
+            $this->videoFolder = rtrim($videoFolder, '/');
+        }
+        else {
+            $this->videoFolder = $videoFolder;
+        }
     }
 
     /**

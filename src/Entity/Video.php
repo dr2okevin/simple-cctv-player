@@ -133,4 +133,20 @@ class Video
     {
         return $this->uid;
     }
+
+    /**
+     * @return CameraType
+     */
+    public function getCameraType(): CameraType
+    {
+        return $this->cameraType;
+    }
+
+    /**
+     * @param CameraType $cameraType
+     */
+    public function setCameraType(CameraType $cameraType): void
+    {
+        $this->cameraType = $cameraType;
+    }
 }

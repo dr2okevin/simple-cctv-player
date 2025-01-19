@@ -8,14 +8,14 @@
             <li>
                 <strong>Title:</strong> {{ video.title }}<br>
                 <strong>Path:</strong> {{ video.path }}<br>
-                <strong>Camera Type:</strong> {{ video.cameraType }}<br>
+                <strong>Camera Type:</strong> {{ video.cameraType.value }}<br>
 
                 {% if video.recordTime is defined %}
                     <strong>Recorded:</strong> {{ video.recordTime|date('Y-m-d H:i') }}<br>
                 {% endif %}
 
                 {% if video.size is not null %}
-                    <strong>Size:</strong> {{ video.size }} bytes<br>
+                    <strong>Size:</strong> {{ (video.size / 1048576)|number_format(2) }} MB<br>
                 {% endif %}
 
                 {% if video.duration is not null %}
