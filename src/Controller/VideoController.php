@@ -69,6 +69,13 @@ class VideoController extends AbstractController
         return $response;
     }
 
+    #[Route('/video/{uid}/download', name: 'video_download')]
+    public function downloadVideo(string $uid): Response
+    {
+        //@todo
+        return $this->streamVideo($uid);
+    }
+
     #[Route('/video/{uid}/lock', name: 'video_lock')]
     public function lockVideo(Video $video): Response
     {

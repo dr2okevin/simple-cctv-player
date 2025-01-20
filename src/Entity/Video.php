@@ -20,7 +20,7 @@ class Video
     #[ORM\Column(type: "string", length: 255)]
     protected string $title;
 
-    #[ORM\Column(type: "string", length: 50)]
+    #[ORM\Column(type: "string", length: 50, enumType: CameraType::class)]
     protected CameraType $cameraType;
 
     #[ORM\Column(type: "boolean")]
@@ -39,8 +39,13 @@ class Video
     {
         $this->setPath($path);
         $this->setTitle($title);
-        $this->uid = substr(sha1($path), 0, 14);
+        $this->uid = self::calculateUid($path);
         $this->setCameraType($cameraType);
+    }
+
+    public static function calculateUid(string $path): string
+    {
+        return substr(sha1($path), 0, 16);
     }
 
     /**

@@ -5,11 +5,19 @@ namespace App\Service;
 use App\Entity\Camera;
 use App\Entity\Video;
 use App\Enum\CameraType;
+use App\Repository\VideoRepository;
 
 class VideoFileManager implements VideoFileManagerInterface
 {
     /** @var string[] $videoExtensions */
     protected array $videoExtensions = ['mp4', 'mkv', 'avi'];
+
+    protected VideoRepository $videoRepository;
+
+    public function __construct(VideoRepository $videoRepository)
+    {
+        $this->videoRepository = $videoRepository;
+    }
 
     /**
      * @inheritDoc
@@ -29,11 +37,21 @@ class VideoFileManager implements VideoFileManagerInterface
             $filenameArray = pathinfo($file);
             if (in_array($filenameArray['extension'], $this->videoExtensions)) {
                 $fullPath = $folder . '/' . $file;
+                $uid = Video::calculateUid($fullPath);
+                $existingVideoObject = $this->videoRepository->findOneByUid($uid);
+                if(isset($existingVideoObject) && $existingVideoObject instanceof Video){
+                    //We found a video object in the Database
+                    $videoObjects[] = $existingVideoObject;
+                    continue;
+                }
+                //Must be a new file, so create a new object
                 $videoObject = new Video($fullPath, $filenameArray['filename'], $camera->getType());
                 $videoObject->setSize($this->calculateVideoSize($videoObject));
                 $videoObject->setRecordTime($this->calculateRecordTime($videoObject));
                 $videoObject->setDuration($this->calculateDuration($videoObject));
+                $this->videoRepository->save($videoObject);
                 $videoObjects[] = $videoObject;
+                //@todo if we made a new video object, save it in the repository
             }
         }
         return $videoObjects;
@@ -90,7 +108,7 @@ class VideoFileManager implements VideoFileManagerInterface
     {
         $path = $video->getPath();
         if (file_exists($path)) {
-            $command = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . $path;
+            $command = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($path);
             $duration = exec($command);
             if ($duration !== false && is_numeric($duration)) {
                 return round($duration, 0);
@@ -101,7 +119,6 @@ class VideoFileManager implements VideoFileManagerInterface
 
     public function findVideoByUid(string $uid): ?Video
     {
-        //@todo
-        return null;
+        return $this->videoRepository->findOneByUid($uid);
     }
 }

@@ -17,7 +17,7 @@
         </thead>
         {% for video in videos %}
             <tr>
-                <td class="video"><video width="168" height="94" src="{{ path('video_stream', {uid: video.uid}) }}"></video></td>
+                <td class="video"><video width="213" height="120" controls src="{{ path('video_stream', {uid: video.uid}) }}"></video></td>
                 <td class="title">{{ video.title }}</td>
                 <td>{{ video.cameraType.value }}</td>
                 <td>{{ video.recordTime|date() }}<br>{{ video.duration }} sec</td>
@@ -28,7 +28,7 @@
                     <input type="checkbox" name="protected" value="{{ video.uid }}">
                     {% endif %}
                 </td>
-                <td>Download</td>
+                <td><a href="{{ path('video_download', {uid: video.uid}) }}" class="btn">Download</a></td>
             </tr>
         {% endfor %}
     </table>
