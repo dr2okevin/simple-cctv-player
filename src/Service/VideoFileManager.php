@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Camera;
 use App\Entity\Video;
+use App\Enum\CameraType;
 
 class VideoFileManager implements VideoFileManagerInterface
 {
@@ -59,8 +60,30 @@ class VideoFileManager implements VideoFileManagerInterface
 
     public function calculateRecordTime(Video $video): \DateTime
     {
-        //@todo
-        return new \DateTime();
+        $path = $video->getPath();
+        $filename = pathinfo($path, PATHINFO_FILENAME);
+        if ($video->getCameraType() == CameraType::Unifi) {
+            $regex = '/^(?\'year\'\d\d\d\d)(?\'month\'\d\d)(?\'day\'\d\d)\.(?\'hour\'\d\d)(?\'minute\'\d\d)(?\'second\'\d\d)/m';
+            preg_match($regex, $filename, $matches);
+        } elseif ($video->getCameraType() == CameraType::Reolink) {
+            $regex = '/(?\'year\'\d\d\d\d)(?\'month\'\d\d)(?\'day\'\d\d)(?\'hour\'\d\d)(?\'minute\'\d\d)(?\'second\'\d\d)/m';
+            preg_match($regex, $filename, $matches);
+        }
+        if (isset($matches) && !empty($matches)) {
+            $timeString = sprintf(
+                '%s-%s-%s %s:%s:%s',
+                $matches['year'],
+                $matches['month'],
+                $matches['day'],
+                $matches['hour'],
+                $matches['minute'],
+                $matches['second']
+            );
+            return new \DateTime($timeString);
+        }
+        //Fallback if regex didn't work
+        $fileTime = filectime($path);
+        return new \DateTime(@$fileTime);
     }
 
     public function calculateDuration(Video $video): int
@@ -74,5 +97,11 @@ class VideoFileManager implements VideoFileManagerInterface
             }
         }
         return 0;
+    }
+
+    public function findVideoByUid(string $uid): ?Video
+    {
+        //@todo
+        return null;
     }
 }
