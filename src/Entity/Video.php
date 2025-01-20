@@ -3,23 +3,36 @@
 namespace App\Entity;
 
 use App\Enum\CameraType;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 
+#[ORM\Entity(repositoryClass: "App\Repository\VideoRepository")]
+#[ORM\Table(name: "videos")]
 class Video
 {
+    #[ORM\Id]
+    #[ORM\Column(type: "string", length: 14, unique: true)]
     protected string $uid;
 
+    #[ORM\Column(type: "string", length: 255)]
     protected string $path;
 
+    #[ORM\Column(type: "string", length: 255)]
     protected string $title;
 
+    #[ORM\Column(type: "string", length: 50)]
     protected CameraType $cameraType;
 
+    #[ORM\Column(type: "boolean")]
     protected bool $isProtected = false;
 
+    #[ORM\Column(type: "datetime")]
     protected \DateTime $recordTime;
 
+    #[ORM\Column(type: "integer", nullable: true)]
     protected ?int $size;
 
+    #[ORM\Column(type: "integer", nullable: true)]
     protected ?int $duration;
 
     public function __construct(string $path, string $title, CameraType $cameraType)
@@ -27,7 +40,7 @@ class Video
         $this->setPath($path);
         $this->setTitle($title);
         $this->uid = substr(sha1($path), 0, 14);
-        $this->cameraType = $cameraType;
+        $this->setCameraType($cameraType);
     }
 
     /**
