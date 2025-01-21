@@ -6,17 +6,23 @@ use App\Entity\Camera;
 use App\Entity\Video;
 use App\Enum\CameraType;
 use App\Repository\VideoRepository;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class VideoFileManager implements VideoFileManagerInterface
 {
     /** @var string[] $videoExtensions */
     protected array $videoExtensions = ['mp4', 'mkv', 'avi'];
 
+    protected string $thumbnailExtension = 'jpg';
+
     protected VideoRepository $videoRepository;
 
-    public function __construct(VideoRepository $videoRepository)
+    protected KernelInterface $kernel;
+
+    public function __construct(VideoRepository $videoRepository, KernelInterface $kernel)
     {
         $this->videoRepository = $videoRepository;
+        $this->kernel = $kernel;
     }
 
     /**
@@ -35,11 +41,11 @@ class VideoFileManager implements VideoFileManagerInterface
         $videoObjects = [];
         foreach ($files as $file) {
             $filenameArray = pathinfo($file);
-            if (in_array($filenameArray['extension'], $this->videoExtensions)) {
+            if (isset($filenameArray['extension']) && in_array($filenameArray['extension'], $this->videoExtensions)) {
                 $fullPath = $folder . '/' . $file;
                 $uid = Video::calculateUid($fullPath);
                 $existingVideoObject = $this->videoRepository->findOneByUid($uid);
-                if(isset($existingVideoObject) && $existingVideoObject instanceof Video){
+                if (isset($existingVideoObject) && $existingVideoObject instanceof Video) {
                     //We found a video object in the Database
                     $videoObjects[] = $existingVideoObject;
                     continue;
@@ -120,5 +126,28 @@ class VideoFileManager implements VideoFileManagerInterface
     public function findVideoByUid(string $uid): ?Video
     {
         return $this->videoRepository->findOneByUid($uid);
+    }
+
+    public function getThumbnail(string $uid): ?string
+    {
+        $projectDir = $this->kernel->getProjectDir();
+        $thumbnailDir = $projectDir . '/var/thumbnails/';
+        if (!is_dir($thumbnailDir)) {
+            mkdir($thumbnailDir, 0774, true);
+        }
+        $path = $thumbnailDir . $uid . '.' . $this->thumbnailExtension;
+        if (!file_exists($path)) {
+            $video = $this->videoRepository->findOneByUid($uid);
+            if (!$video instanceof Video) {
+                return null;
+            }
+            $command = 'ffmpeg -i ' . escapeshellarg(realpath($video->getPath())) . ' -vf thumbnail=n=100 -frames:v 1 ' . escapeshellarg($path);
+            exec($command, $output, $returnVar);
+            if ($returnVar !== 0) {
+                return null;
+            }
+
+        }
+        return $path;
     }
 }

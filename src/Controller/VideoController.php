@@ -6,7 +6,9 @@ use App\Entity\Video;
 use App\Service\CameraManager;
 use App\Service\VideoFileManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -80,13 +82,26 @@ class VideoController extends AbstractController
     public function lockVideo(Video $video): Response
     {
         $video->setIsProtected(true);
-        return new Response('video test');
+        return new Response('video locked');
     }
 
     #[Route('/video/{uid}/lock', name: 'video_unlock')]
     public function unlockVideo(Video $video): Response
     {
         $video->setIsProtected(false);
-        return new Response('video test');
+        return new Response('video unlocked');
+    }
+
+    #[Route('/video/{uid}/thumbnail', name: 'video_thumbnail')]
+    public function videoThumbnail(string $uid): Response
+    {
+        $thumbnail = $this->videoFileManager->getThumbnail($uid);
+        if($thumbnail === null)
+        {
+            throw $this->createNotFoundException('File not found');
+        }
+        $response = $this->file($thumbnail, basename($thumbnail), ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+        $response->headers->set('Cache-Control', 'max-age=31536000, immutable');
+        return $response;
     }
 }
