@@ -17,7 +17,7 @@
         </thead>
         {% for video in videos %}
             <tr>
-                <td class="video"><video width="213" height="120" controls src="{{ path('video_stream', {uid: video.uid}) }}"></video></td>
+                <td class="video"><video width="213" height="120" preload="none" controls src="{{ path('video_stream', {uid: video.uid}) }}" poster="{{ path('video_thumbnail', {uid: video.uid}) }}"></video></td>
                 <td class="title">{{ video.title }}</td>
                 <td>{{ video.cameraType.value }}</td>
                 <td>{{ video.recordTime|date() }}<br>{{ video.duration }} sec</td>

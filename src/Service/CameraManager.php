@@ -4,14 +4,18 @@ namespace App\Service;
 
 use App\Entity\Camera;
 use App\Enum\CameraType;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class CameraManager implements CameraManagerInterface
 {
     private string $configPath;
 
-    public function __construct(string $configPath)
+    protected KernelInterface $kernel;
+
+    public function __construct(string $configPath, KernelInterface $kernel)
     {
         $this->configPath = $configPath;
+        $this->kernel = $kernel;
     }
 
     /**
@@ -33,8 +37,9 @@ class CameraManager implements CameraManagerInterface
         /**
          * @var array{title: string, videoFolder: string, cameraType: string, liveUri: ?string} $cameraArray
          */
-        foreach ($cameraArrays['cameras'] as $cameraArray) {
+        foreach ($cameraArrays['cameras'] as $uid => $cameraArray) {
             $camera = new Camera();
+            $camera->setUid($uid);
             $camera->setTitle($cameraArray['title']);
             $camera->setVideoFolder($cameraArray['videoFolder']);
             $camera->setType(CameraType::from($cameraArray['cameraType']));
@@ -44,6 +49,29 @@ class CameraManager implements CameraManagerInterface
         }
 
         return $cameraObjects;
+    }
+
+    public function getPreview(Camera $camera): ?string
+    {
+        $cacheTime = 10; //time in seconds
+        $projectDir = $this->kernel->getProjectDir();
+        $imageDir = $projectDir . '/var/cache/CameraPreviews/';
+        if (!file_exists($imageDir)) {
+            mkdir($imageDir, 0774, true);
+        }
+        $imagePath = $imageDir . "Camera_" . $camera->getUid() . ".jpg";
+        if (file_exists($imagePath) && filectime($imagePath) >= time() - $cacheTime) {
+            return $imagePath;
+        }
+        if (empty($camera->getLiveUri())) {
+            return null;
+        }
+        $ffmpegCommand = "ffmpeg -y -i " . escapeshellarg($camera->getLiveUri()) . " -vframes 1 -rtsp_transport tcp " . escapeshellarg($imagePath);
+        exec($ffmpegCommand, $output, $returnVar);
+        if ($returnVar !== 0) {
+            return null;
+        }
+        return $imagePath;
     }
 
 }

@@ -57,7 +57,6 @@ class VideoFileManager implements VideoFileManagerInterface
                 $videoObject->setDuration($this->calculateDuration($videoObject));
                 $this->videoRepository->save($videoObject);
                 $videoObjects[] = $videoObject;
-                //@todo if we made a new video object, save it in the repository
             }
         }
         return $videoObjects;
@@ -149,5 +148,16 @@ class VideoFileManager implements VideoFileManagerInterface
 
         }
         return $path;
+    }
+
+    public function deleteVideo(string $uid): bool
+    {
+        //@todo
+        //check if video even exist
+        //check if video is protected (don't delete then)
+        //delete video file
+        //delete thumbnail
+        //delete db entry
+        return false;
     }
 }

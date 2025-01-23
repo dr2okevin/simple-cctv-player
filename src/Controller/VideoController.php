@@ -32,7 +32,7 @@ class VideoController extends AbstractController
         foreach ($cameras as $camera) {
             $videos = array_merge($videos, $this->videoFileManager->getVideos($camera));
         }
-        return $this->render('video/list.videos.html.twig', [
+        return $this->render('video/list.html.twig', [
             'videos' => $videos,
         ]);
     }
