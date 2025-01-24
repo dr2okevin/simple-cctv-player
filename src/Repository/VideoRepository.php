@@ -17,7 +17,8 @@ class VideoRepository extends ServiceEntityRepository
         parent::__construct($registry, Video::class);
     }
 
-    public function save(Video $video){
+    public function save(Video $video): void
+    {
         $this->getEntityManager()->persist($video);
         $this->getEntityManager()->flush();
     }

@@ -1,36 +1,77 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div class="contentBlock">
-    <h2>Video List</h2>
+    <script>
+        //@TODO: Big bug, works only if checkbox was already selected on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkboxes = document.querySelectorAll('form input[type="checkbox"]');
 
-    <table class="video-list">
-        <thead>
-        <tr>
-            <th colspan="2">Video</th>
-            <th>Kamera</th>
-            <th>Datum</th>
-            <th>Größe</th>
-            <th>Geschützt</th>
-            <th>Download</th>
-        </tr>
-        </thead>
-        {% for video in videos %}
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function (event) {
+                    event.preventDefault();
+                    const form = event.target.closest('form');
+                    if (form) {
+                        const formData = new FormData(form);
+
+                        if (!checkbox.checked) {
+                            formData.set(checkbox.name, 'false');
+                        }
+                        formData.append('submission_method', 'js');
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'same-origin'
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Response was not ok');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There where some errors:', error);
+                            });
+                    }
+                });
+            });
+        });
+    </script>
+    <div class="contentBlock">
+        <h2>Video List</h2>
+
+        <table class="video-list">
+            <thead>
             <tr>
-                <td class="video"><video width="213" height="120" preload="none" controls src="{{ path('video_stream', {uid: video.uid}) }}" poster="{{ path('video_thumbnail', {uid: video.uid}) }}"></video></td>
-                <td class="title">{{ video.title }}</td>
-                <td>{{ video.cameraType.value }}</td>
-                <td>{{ video.recordTime|date() }}<br>{{ video.duration }} sec</td>
-                <td>{{ (video.size / 1048576)|number_format(2) }} MB</td>
-                <td>{% if video.isProtected  %}
-                    <input type="checkbox" name="protected" value="{{ video.uid }}" checked>
-                    {% else %}
-                    <input type="checkbox" name="protected" value="{{ video.uid }}">
-                    {% endif %}
-                </td>
-                <td><a href="{{ path('video_download', {uid: video.uid}) }}" class="btn">Download</a></td>
+                <th colspan="2">Video</th>
+                <th>Kamera</th>
+                <th>Datum</th>
+                <th>Größe</th>
+                <th>Geschützt</th>
+                <th>Download</th>
             </tr>
-        {% endfor %}
-    </table>
+            </thead>
+            {% for video in videos %}
+                <tr>
+                    <td class="video">
+                        <video width="213" height="120" preload="none" controls
+                               src="{{ path('video_stream', {uid: video.uid}) }}"
+                               poster="{{ path('video_thumbnail', {uid: video.uid}) }}"></video>
+                    </td>
+                    <td class="title">{{ video.title }}</td>
+                    <td>{{ video.cameraType.value }}</td>
+                    <td>{{ video.recordTime|date() }}<br>{{ video.duration }} sec</td>
+                    <td>{{ (video.size / 1048576)|number_format(2) }} MB</td>
+                    <td>{% if video.isProtected %}
+                        <form action="{{ path('list_videos') }}" method="POST" name="video-{{ video.uid }}">
+                            <input type="checkbox" name="protected[{{ video.uid }}]" value="true" checked>
+                            {% else %}
+                                <input type="checkbox" name="protected[{{ video.uid }}]" value="false">
+                            {% endif %}
+                            <input type="submit">
+                        </form>
+                    </td>
+                    <td><a href="{{ path('video_download', {uid: video.uid}) }}" class="btn">Download</a></td>
+                </tr>
+            {% endfor %}
+        </table>
     </div>
 {% endblock %}

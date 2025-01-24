@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Video;
+use App\Repository\VideoRepository;
 use App\Service\CameraManager;
 use App\Service\VideoFileManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -18,15 +20,37 @@ class VideoController extends AbstractController
 
     private VideoFileManager $videoFileManager;
 
-    public function __construct(CameraManager $cameraManager, VideoFileManager $videoFileManager)
+    private Request $request;
+
+    private VideoRepository $videoRepository;
+
+    public function __construct(CameraManager $cameraManager, VideoFileManager $videoFileManager, VideoRepository $videoRepository)
     {
         $this->videoFileManager = $videoFileManager;
         $this->cameraManager = $cameraManager;
+        $this->videoRepository = $videoRepository;
+        $this->request = Request::createFromGlobals();
     }
 
     #[Route('/listVideos', name: 'list_videos')]
     public function listVideos(): Response
     {
+
+        foreach ($this->request->request->all('protected') as $videoUid => $protected) {
+            $video = $this->videoRepository->findOneByUid($videoUid);
+            if ($video instanceof Video) {
+                if ($protected === 'true' || $protected === '1' || $protected === true) {
+                    $video->setIsProtected(true);
+                } elseif ($protected === 'false' || $protected === '0' || $protected === false) {
+                    $video->setIsProtected(false);
+                }
+                $this->videoRepository->save($video);
+            }
+        }
+        if($this->request->request->all()['submission_method'] == 'js'){
+            return new Response(null, 204);
+        }
+
         $cameras = $this->cameraManager->getCameras();
         $videos = [];
         foreach ($cameras as $camera) {
@@ -96,8 +120,7 @@ class VideoController extends AbstractController
     public function videoThumbnail(string $uid): Response
     {
         $thumbnail = $this->videoFileManager->getThumbnail($uid);
-        if($thumbnail === null)
-        {
+        if ($thumbnail === null) {
             throw $this->createNotFoundException('File not found');
         }
         $response = $this->file($thumbnail, basename($thumbnail), ResponseHeaderBag::DISPOSITION_ATTACHMENT);

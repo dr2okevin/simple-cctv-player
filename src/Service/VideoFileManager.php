@@ -62,12 +62,12 @@ class VideoFileManager implements VideoFileManagerInterface
         return $videoObjects;
     }
 
-    public function protectVideo(Video $video)
+    public function protectVideo(Video $video): void
     {
         $video->setIsProtected(true);
     }
 
-    public function unprotectVideo(Video $video)
+    public function unprotectVideo(Video $video): void
     {
         $video->setIsProtected(false);
     }
@@ -158,6 +158,7 @@ class VideoFileManager implements VideoFileManagerInterface
         //delete video file
         //delete thumbnail
         //delete db entry
+        //return true if deletion was sucessfull, otherwise false
         return false;
     }
 }
