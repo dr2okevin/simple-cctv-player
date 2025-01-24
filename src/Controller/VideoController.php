@@ -47,7 +47,7 @@ class VideoController extends AbstractController
                 $this->videoRepository->save($video);
             }
         }
-        if(isset($this->request->request->all()['submission_method']) && $this->request->request->all()['submission_method'] == 'js'){
+        if (isset($this->request->request->all()['submission_method']) && $this->request->request->all()['submission_method'] == 'js') {
             return new Response(null, 204);
         }
 
@@ -98,8 +98,19 @@ class VideoController extends AbstractController
     #[Route('/video/{uid}/download', name: 'video_download')]
     public function downloadVideo(string $uid): Response
     {
-        //@todo
-        return $this->streamVideo($uid);
+        $video = $this->videoFileManager->findVideoByUid($uid);
+
+        if (!$video) {
+            throw $this->createNotFoundException('Video not found');
+        }
+        $filePath = $video->getPath();
+
+        if (!file_exists($filePath)) {
+            throw $this->createNotFoundException('File not found');
+        }
+        $response = $this->file($filePath, basename($filePath), ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+        $response->headers->set('Cache-Control', 'max-age=31536000, immutable');
+        return $response;
     }
 
     #[Route('/video/{uid}/lock', name: 'video_lock')]
