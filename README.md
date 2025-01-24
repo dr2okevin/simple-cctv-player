@@ -12,4 +12,10 @@ So this will be a simple web interface to watch the recordings and cleanup old f
 we can use a very lightweight system like a raspberry zero.
 
 Screenshot: (as everything, even the ui is in early development)  
-![image](Documentation/Screenshot_20250121_215000.png)
+![image](Documentation/video_list.png)
+
+## Requirements
+- PHP >= 8.2
+- composer
+- any php compatible webserver
+- ffmpeg (to get video metadata and create preview images)
