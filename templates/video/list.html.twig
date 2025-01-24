@@ -2,37 +2,73 @@
 
 {% block body %}
     <script>
-        //@TODO: Big bug, works only if checkbox was already selected on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            const checkboxes = document.querySelectorAll('form input[type="checkbox"]');
+        document.body.addEventListener('click', function (event) {
+            const btn = event.target;
 
-            checkboxes.forEach(function (checkbox) {
-                checkbox.addEventListener('change', function (event) {
-                    event.preventDefault();
-                    const form = event.target.closest('form');
-                    if (form) {
-                        const formData = new FormData(form);
+            // Prüfen, ob der geklickte Button in einem Formular ist
+            if (btn.matches('button[name^="protected["], button[name="delete"]')) {
+                event.preventDefault();
 
-                        if (!checkbox.checked) {
-                            formData.set(checkbox.name, 'false');
+                const form = btn.closest('form');
+                if (!form) return;
+
+                // Erstellen Sie das FormData-Objekt
+                const formData = new FormData(form);
+
+                // Den geklickten Button explizit hinzufügen, da preventDefault() die automatische Übernahme verhindert
+                const {name, value} = btn;
+                if (name) {
+                    formData.set(name, value);
+                }
+
+                // Optional: Markieren, dass via JS gesendet wird
+                formData.append('submission_method', 'js');
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Request failed with status ' + response.status);
                         }
-                        formData.append('submission_method', 'js');
-                        fetch(form.action, {
-                            method: 'POST',
-                            body: formData,
-                            credentials: 'same-origin'
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Response was not ok');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('There where some errors:', error);
-                            });
-                    }
-                });
-            });
+                        // Erfolgreich => Button toggeln
+                        if (btn.value === 'true') {
+                            // Wir haben den Video-Status jetzt auf "geschützt" gesetzt
+                            // => Button wird zum "Unlock"-Button
+                            btn.value = 'false';
+                            btn.title = 'Unlock video';
+                            btn.textContent = '🔒'; // neues Icon
+                        } else {
+                            // Wir haben den Video-Status jetzt auf "unprotected" gesetzt
+                            // => Button wird zum "Lock"-Button
+                            btn.value = 'true';
+                            btn.title = 'Lock video';
+                            btn.textContent = '🔓'; // neues Icon
+                        }
+                        // 2. Delete-Button im selben Formular ansprechen
+                        const deleteBtn = form.querySelector('button[name^="delete["]');
+
+                        if (!deleteBtn) {
+                            // Falls kein Delete-Button vorhanden ist, gibt es nichts zu tun
+                            return;
+                        }
+
+                        // Falls das Video nun geschützt ist, deaktivieren wir den Delete-Button
+                        if (btn.value === 'false') {
+                            deleteBtn.disabled = true;
+                            deleteBtn.classList.add('btn-disabled');
+                        } else {
+                            // Video ist ungeschützt => Delete-Button aktivieren
+                            deleteBtn.disabled = false;
+                            deleteBtn.classList.remove('btn-disabled');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                    });
+            }
         });
     </script>
     <div class="contentBlock">
@@ -45,14 +81,13 @@
                 <th>Kamera</th>
                 <th>Datum</th>
                 <th>Größe</th>
-                <th>Geschützt</th>
-                <th>Download</th>
+                <th></th>
             </tr>
             </thead>
             {% for video in videos %}
                 <tr>
                     <td class="video">
-                        <video width="213" height="120" preload="none" controls
+                        <video width="212" height="120" preload="none" controls
                                src="{{ path('video_stream', {uid: video.uid}) }}"
                                poster="{{ path('video_thumbnail', {uid: video.uid}) }}"></video>
                     </td>
@@ -60,16 +95,23 @@
                     <td>{{ video.cameraType.value }}</td>
                     <td>{{ video.recordTime|date() }}<br>{{ video.duration }} sec</td>
                     <td>{{ (video.size / 1048576)|number_format(2) }} MB</td>
-                    <td>{% if video.isProtected %}
-                        <form action="{{ path('list_videos') }}" method="POST" name="video-{{ video.uid }}">
-                            <input type="checkbox" name="protected[{{ video.uid }}]" value="true" checked>
+                    <td>
+                    <form action="{{ path('list_videos') }}" method="POST" name="video-{{ video.uid }}">
+                        <div class="btn-group">
+                            {% if video.isProtected %}
+                                <button type="submit" class="btn btn-icon btn-lock btn-group" name="protected[{{ video.uid }}]" value="false" title="Unlock video">&#128274;</button>
                             {% else %}
-                                <input type="checkbox" name="protected[{{ video.uid }}]" value="false">
+                                <button type="submit" class="btn btn-icon btn-lock btn-group" name="protected[{{ video.uid }}]" value="true" title="Lock video">&#128275;</button>
                             {% endif %}
-                            <input type="submit">
-                        </form>
+                            {% if video.isProtected %}
+                                <button type="submit" disabled class="btn btn-icon btn-delete btn-group btn-disabled" name="delete[{{ video.uid }}]" value="" title="Delete video">&#128465;</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-icon btn-delete btn-group" name="delete[{{ video.uid }}]" value="" title="Delete video">&#128465;</button>
+                            {% endif %}
+                            <a href="{{ path('video_download', {uid: video.uid}) }}" class="btn btn-icon btn-download btn-group" title="Download Video">&#128229;</a>
+                        </div>
+                    </form>
                     </td>
-                    <td><a href="{{ path('video_download', {uid: video.uid}) }}" class="btn">Download</a></td>
                 </tr>
             {% endfor %}
         </table>
