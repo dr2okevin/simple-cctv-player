@@ -47,7 +47,7 @@ class VideoController extends AbstractController
                 $this->videoRepository->save($video);
             }
         }
-        if($this->request->request->all()['submission_method'] == 'js'){
+        if(isset($this->request->request->all()['submission_method']) && $this->request->request->all()['submission_method'] == 'js'){
             return new Response(null, 204);
         }
 
