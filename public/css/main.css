@@ -108,7 +108,7 @@ div.header {
     border-left: none;
 }
 .btn.btn-group:first-child {
-    border-left: 1px;
+    border-left: 1px solid white;
 }
 
 div.btn-group {
