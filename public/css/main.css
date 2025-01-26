@@ -120,3 +120,28 @@ div.btn-group {
 .btn-disabled, .btn.btn-group.btn-disabled {
     cursor: not-allowed;
 }
+
+.camera-preview-image {
+    max-width: 100%;
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
+    align-content: center;
+}
+.camera-container {
+    display: block;
+    max-width: 700px;
+    border: 1px solid black;
+    position: relative;
+}
+.camera-controls {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}

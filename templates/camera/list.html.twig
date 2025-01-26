@@ -1,13 +1,53 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+    <script>
+        let refreshInterval = null;
+
+        function refreshImages() {
+            document.querySelectorAll('.camera-preview-image').forEach(img => {
+                // Append a timestamp to bypass caching
+                img.src = img.src.split('?')[0] + '?t=' + Date.now();
+            });
+        }
+
+        function startRefreshing() {
+            if (!refreshInterval) {
+                refreshInterval = setInterval(refreshImages, 5000);
+            }
+        }
+
+        function stopRefreshing() {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            document.hidden ? stopRefreshing() : startRefreshing();
+        });
+
+        // Start immediately if the tab is visible
+        if (!document.hidden) {
+            startRefreshing();
+        }
+    </script>
     <div class="contentBlock">
     <h2>Camera List</h2>
 
-
+        <div class="flex-container">
         {% for camera in cameras %}
 
-        {% endfor %}
+                <div class="camera-container">
+                    <div class="camera-preview">
+                        <a href="{{ camera.liveUri }}"><img class="camera-preview-image" src="{{ path('show_camera_preview', {uid: camera.uid}) }}" alt="{{ camera.title }}" ></a>
+                    </div>
+                    <div class="camera-controls">
+                        <div class="btn-group">
+                        </div>
+                    </div>
+                </div>
 
+        {% endfor %}
+        </div>
     </div>
 {% endblock %}
