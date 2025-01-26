@@ -140,7 +140,8 @@ class VideoFileManager implements VideoFileManagerInterface
             if (!$video instanceof Video) {
                 return null;
             }
-            $command = 'ffmpeg -i ' . escapeshellarg(realpath($video->getPath())) . ' -vf thumbnail=n=100 -frames:v 1 ' . escapeshellarg($path);
+            $halfVideoTime = (int) round($video->getDuration() / 2, 0);
+            $command = 'ffmpeg -i ' . escapeshellarg(realpath($video->getPath())) . ' -ss ' . $halfVideoTime . ' -frames:v 1 ' . escapeshellarg($path);
             exec($command, $output, $returnVar);
             if ($returnVar !== 0) {
                 return null;
@@ -158,7 +159,7 @@ class VideoFileManager implements VideoFileManagerInterface
         //delete video file
         //delete thumbnail
         //delete db entry
-        //return true if deletion was sucessfull, otherwise false
+        //return true if deletion was successful, otherwise false
         return false;
     }
 }
