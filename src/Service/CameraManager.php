@@ -23,6 +23,11 @@ class CameraManager implements CameraManagerInterface
      */
     public function getCameras(): array
     {
+        if (!file_exists($this->configPath)) {
+            $json = json_encode([]);
+            file_get_contents($json);
+        }
+
         if (!file_exists($this->configPath) || !is_readable($this->configPath)) {
             throw new \Exception('Config file not found or not readable: ' . $this->configPath);
         }
