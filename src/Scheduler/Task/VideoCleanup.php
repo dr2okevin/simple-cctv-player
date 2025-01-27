@@ -28,7 +28,7 @@ class VideoCleanup
         //And to not delete always from the same camera, we add some randomness to it
         shuffle($cameras);
         foreach ($cameras as $camera){
-            if($this->cameraFolderIsFull($camera))
+            if($this->isCameraFolderFull($camera))
             {
                 $this->deleteOldestVideo($camera);
             }
@@ -36,7 +36,7 @@ class VideoCleanup
         //@todo
     }
 
-    private function cameraFolderIsFull(Camera $camera): bool
+    private function isCameraFolderFull(Camera $camera): bool
     {
         //@todo
         return false;

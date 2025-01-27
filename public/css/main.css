@@ -75,6 +75,20 @@ div.header {
     padding: 10px;
     margin-bottom: 15px;
     box-shadow: 0 0 1em 0.5em rgba(55, 55, 55, 0.45);
+    display: flex;
+    align-items: center;
+    align-content: center;
+}
+
+div.header div.nav {
+    width: 100%;
+    text-align: center;
+}
+ul.nav {
+    display: flex;
+    list-style: none;
+    align-items: center;
+    align-content: center;
 }
 
 .logo {
@@ -123,6 +137,7 @@ div.btn-group {
 
 .camera-preview-image {
     max-width: 100%;
+    display: block;
 }
 
 .flex-container {
@@ -138,6 +153,7 @@ div.btn-group {
     max-width: 700px;
     border: 1px solid black;
     position: relative;
+    margin: 10px;
 }
 .camera-controls {
     display: inline-block;

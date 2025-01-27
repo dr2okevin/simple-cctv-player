@@ -14,7 +14,12 @@
     <body>
     <div class="header">
         <div><img src="{{ asset('images/icon.svg') }}" class="logo" alt=""></div>
-        <div><p>Neustes Video</p><p>Ältestes Video Video</p></div>
+        <div class="nav">
+            <ul class="nav">
+                <li><a href="{{ path('list_videos') }}">Videos</a> </li>
+                <li><a href="{{ path('list_cameras') }}">Cameras</a> </li>
+            </ul>
+        </div>
     </div>
     <div class="page-body">
         {% block body %}{% endblock %}
