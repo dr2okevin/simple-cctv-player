@@ -16,6 +16,10 @@ class Camera
 
     protected string $liveUri;
 
+    protected int $keepFreeSpace;
+
+    protected const defaultKeepFreeSpace = 1024;
+
     /**
      * @return string
      */
@@ -45,10 +49,9 @@ class Camera
      */
     public function setVideoFolder(string $videoFolder): void
     {
-        if($videoFolder !== '/'){
+        if ($videoFolder !== '/') {
             $this->videoFolder = rtrim($videoFolder, '/');
-        }
-        else {
+        } else {
             $this->videoFolder = $videoFolder;
         }
     }
@@ -99,5 +102,57 @@ class Camera
     public function setUid(string $uid): void
     {
         $this->uid = $uid;
+    }
+
+    /**
+     * @return int
+     */
+    public function getKeepFreeSpace(): int
+    {
+        if(!$this->keepFreeSpace == null) {
+            return $this->keepFreeSpace;
+        } else {
+            return self::defaultKeepFreeSpace;
+        }
+    }
+
+    /**
+     * @param int|string $keepFreeSpace
+     */
+    public function setKeepFreeSpace(int|string $keepFreeSpace): void
+    {
+        //Integers are interpreted as Megabyte
+        if (is_int($keepFreeSpace)) {
+            $this->keepFreeSpace = $keepFreeSpace;
+            return;
+        }
+        $keepFreeSpace = strtolower(trim($keepFreeSpace));
+
+        //What unit is it?
+        if (preg_match('/^([\d\.]+)\s*(kb|mb|gb|tb|pb)?$/', $keepFreeSpace, $matches)) {
+            $numeric = (float)$matches[1];
+            $suffix = $matches[2] ?? '';
+
+            // convert to MB
+            switch ($suffix) {
+                case 'kb':
+                    $numeric /= 1024; // MB in kB
+                    break;
+                case 'gb':
+                    $numeric *= 1024; // GB in MB
+                    break;
+                case 'tb':
+                    $numeric *= 1024 * 1024; // TB in MB
+                    break;
+                case 'pb':
+                    $numeric *= 1024 * 1024 * 1024; // PB in MB
+                    break;
+                case 'mb':
+                default:
+                    // Is already MB or unknown
+                    break;
+            }
+            $this->keepFreeSpace = (int)round($numeric);
+        }
     }
 }
