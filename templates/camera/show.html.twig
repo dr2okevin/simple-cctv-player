@@ -32,12 +32,40 @@
         }
     </script>
     <div class="contentBlock">
-    <h2>Camera {{ camera.uid}} - {{ camera.title }}</h2>
+        <h2>Camera {{ camera.uid }} - {{ camera.title }}</h2>
 
-        Titel: {{ camera.title }}
-        Video folder: {{ camera.videoFolder }}
-        cameraType: {{ camera.type.value }}
-        Live URI: {{ camera.liveUri }}
+        <form action="" name="camera" method="post">
+            <div class="flex-container">
+                <div class="form-element">
+                    <label for="camera_title">Titel</label>
+                    <input type="text" id="camera_title" name="camera[title]" value="{{ camera.title }}">
+                </div>
+                <div class="form-element">
+                    <label for="camera_videoFolder">Video-Ordner</label>
+                    <input type="text" id="camera_videoFolder" name="camera[videoFolder]"
+                           value="{{ camera.videoFolder }}">
+                </div>
+                <div class="form-element">
+                    <label for="camera_type">Kameratyp</label>
+                    <input type="text" id="camera_type" name="camera[type]" value="{{ camera.type.value }}">
+                </div>
+                <div class="form-element">
+                    <label for="camera_liveUri">Live-URI</label>
+                    <input type="text" id="camera_liveUri" name="camera[liveUri]" value="{{ camera.liveUri }}">
+                </div>
+                <div class="form-element" style="position: relative">
+                    <label for="camera_keepFreeSpace">Mindest-Freier Speicherplatz</label>
+                    <input type="text" id="camera_keepFreeSpace" name="camera[keepFreeSpace]"
+                           value="{{ camera.keepFreeSpace }}"
+                           placeholder="1024"><span style="right:5px;position: absolute;top: 25%;">MB</span>
+                </div>
+                <div class="form-element" style="grid-column: 1 / span 2;justify-self: center;">
+                    <input type="hidden" name="camera[uid]" value="{{ camera.uid }}">
+                    <input type="submit">
+                </div>
+            </div>
+        </form>
+
 
     </div>
 {% endblock %}

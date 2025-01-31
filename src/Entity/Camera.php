@@ -16,7 +16,7 @@ class Camera
 
     protected string $liveUri;
 
-    protected int $keepFreeSpace;
+    protected ?int $keepFreeSpace = null;
 
     protected const defaultKeepFreeSpace = 1024;
 
