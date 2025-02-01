@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Scheduler\Task;
 
 use App\Entity\Camera;
+use App\Repository\VideoRepository;
 use App\Service\CameraManager;
 use App\Service\VideoFileManager;
 use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
@@ -16,9 +18,13 @@ class VideoCleanup
 
     private VideoFileManager $videoFileManager;
 
-    public function __construct(CameraManager $cameraManager, VideoFileManager $videoFileManager){
+    private VideoRepository $videoRepository;
+
+    public function __construct(CameraManager $cameraManager, VideoFileManager $videoFileManager, VideoRepository $videoRepository)
+    {
         $this->cameraManager = $cameraManager;
         $this->videoFileManager = $videoFileManager;
+        $this->videoRepository = $videoRepository;
     }
 
     public function __invoke()
@@ -38,12 +44,19 @@ class VideoCleanup
 
     private function isCameraFolderFull(Camera $camera): bool
     {
-        //@todo
-        return false;
+        $folder = $camera->getVideoFolder();
+        if (!is_dir($folder)) {
+            // looks like the folder dosen't exist
+            return false;
+        }
+        $freeBytes = disk_free_space($folder);
+        $thresholdBytes = $camera->getKeepFreeSpace() * 1048576; // MB in Bytes
+        return $freeBytes < $thresholdBytes;
     }
 
     private function deleteOldestVideo(Camera $camera): void
     {
+        $videos = $this->videoRepository->findDeletableVideosByCamera($camera);
         //@todo
     }
 }

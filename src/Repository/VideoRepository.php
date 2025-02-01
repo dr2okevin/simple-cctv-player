@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Camera;
 use App\Entity\Video;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Criteria;
@@ -21,6 +22,20 @@ class VideoRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->persist($video);
         $this->getEntityManager()->flush();
+    }
+
+    public function findDeletableVideosByCamera(Camera $camera): array
+    {
+        $folder = $camera->getVideoFolder();
+        // Wir filtern alle Videos, deren Pfad mit dem Kamera-Ordner beginnt.
+        $qb = $this->createQueryBuilder('v')
+            ->where('v.path LIKE :folder')
+            ->andWhere('v.isProtected = :protected')
+            ->setParameter('folder', $folder . '/%')
+            ->setParameter('protected', false)
+            ->orderBy('v.recordTime', 'ASC');
+
+        return $qb->getQuery()->getResult();
     }
 
 //    public function findOneByUid(string $uid): object|null
