@@ -3,6 +3,7 @@
 namespace App\Scheduler\Task;
 
 use App\Entity\Camera;
+use App\Entity\Video;
 use App\Repository\VideoRepository;
 use App\Service\CameraManager;
 use App\Service\VideoFileManager;
@@ -33,9 +34,8 @@ class VideoCleanup
         //We don't know if cameras share the same file system, so we check all.
         //And to not delete always from the same camera, we add some randomness to it
         shuffle($cameras);
-        foreach ($cameras as $camera){
-            if($this->isCameraFolderFull($camera))
-            {
+        foreach ($cameras as $camera) {
+            if ($this->isCameraFolderFull($camera)) {
                 $this->deleteOldestVideo($camera);
             }
         }
@@ -54,9 +54,15 @@ class VideoCleanup
         return $freeBytes < $thresholdBytes;
     }
 
-    private function deleteOldestVideo(Camera $camera): void
+    private function deleteOldestVideo(Camera $camera): bool
     {
         $videos = $this->videoRepository->findDeletableVideosByCamera($camera);
-        //@todo
+        foreach ($videos as $video) {
+            if ($video instanceof Video) {
+                $this->videoFileManager->deleteVideo($video->getUid());
+                return true;
+            }
+        }
+        return false;
     }
 }

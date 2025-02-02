@@ -127,7 +127,7 @@ class VideoFileManager implements VideoFileManagerInterface
         return $this->videoRepository->findOneByUid($uid);
     }
 
-    public function getThumbnail(string $uid): ?string
+    public function getThumbnailPath(string $uid): string
     {
         $projectDir = $this->kernel->getProjectDir();
         $thumbnailDir = $projectDir . '/var/thumbnails/';
@@ -135,12 +135,18 @@ class VideoFileManager implements VideoFileManagerInterface
             mkdir($thumbnailDir, 0774, true);
         }
         $path = $thumbnailDir . $uid . '.' . $this->thumbnailExtension;
+        return $path;
+    }
+
+    public function getThumbnail(string $uid): ?string
+    {
+        $path = $this->getThumbnailPath($uid);
         if (!file_exists($path)) {
             $video = $this->videoRepository->findOneByUid($uid);
             if (!$video instanceof Video) {
                 return null;
             }
-            $halfVideoTime = (int) round($video->getDuration() / 2, 0);
+            $halfVideoTime = (int)round($video->getDuration() / 2, 0);
             $command = 'ffmpeg -i ' . escapeshellarg(realpath($video->getPath())) . ' -ss ' . $halfVideoTime . ' -frames:v 1 ' . escapeshellarg($path);
             exec($command, $output, $returnVar);
             if ($returnVar !== 0) {
@@ -153,13 +159,33 @@ class VideoFileManager implements VideoFileManagerInterface
 
     public function deleteVideo(string $uid): bool
     {
-        //@todo
-        //check if video even exist
-        //check if video is protected (don't delete then)
-        //delete video file
-        //delete thumbnail
-        //delete db entry
-        //return true if deletion was successful, otherwise false
-        return false;
+        //Abort if the Video doesn't exists.
+        $video = $this->findVideoByUid($uid);
+        if (!$video instanceof Video) {
+            return false;
+        }
+
+        //Abort if the video is protected
+        if ($video->isProtected()) {
+            return false;
+        }
+
+        //Delete the original file
+        $videoPath = $video->getPath();
+        if (file_exists($videoPath)) {
+            if (!unlink($videoPath)) {
+                return false;
+            }
+        }
+
+        //Delte Thumbnail
+        $thumbnailPath = $this->getThumbnailPath($uid);
+        if (file_exists($thumbnailPath)) {
+            if (!unlink($thumbnailPath)) {
+                return false;
+            }
+        }
+        $this->videoRepository->remove($video);
+        return true;
     }
 }
