@@ -136,7 +136,7 @@ div.btn-group {
 }
 
 .camera-preview-image {
-    max-width: 100%;
+    width: 100%;
     display: block;
 }
 
@@ -150,6 +150,7 @@ div.btn-group {
 }
 .camera-container {
     display: block;
+    width: 100%;
     max-width: 700px;
     border: 1px solid black;
     position: relative;
@@ -160,4 +161,18 @@ div.btn-group {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+form .flex-container {
+    display: grid;
+    gap: 8px;
+}
+.flex-container .form-element {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+}
+@media screen and (min-width: 800px) {
+    form .flex-container {
+        grid-template-columns: 1fr 1fr;
+    }
 }
