@@ -16,7 +16,15 @@ class Camera
 
     protected string $liveUri;
 
+    /**
+     * @var int|null how much space in MB should be kept free
+     */
     protected ?int $keepFreeSpace = null;
+
+    /**
+     * @var int the maximum age in hours
+     */
+    protected int $maxAge = 0;
 
     protected const defaultKeepFreeSpace = 1024;
 
@@ -109,7 +117,7 @@ class Camera
      */
     public function getKeepFreeSpace(): int
     {
-        if(!$this->keepFreeSpace == null) {
+        if (!$this->keepFreeSpace == null) {
             return $this->keepFreeSpace;
         } else {
             return self::defaultKeepFreeSpace;
@@ -154,5 +162,24 @@ class Camera
             }
             $this->keepFreeSpace = (int)round($numeric);
         }
+    }
+
+    /**
+     * @return int the maximum age in hours
+     */
+    public function getMaxAge(): int
+    {
+        return $this->maxAge;
+    }
+
+    /**
+     * @param int|string $maxAge the maximum age in hours
+     */
+    public function setMaxAge(int|string $maxAge): void
+    {
+        if(is_string($maxAge)){
+            $maxAge = (int)$maxAge;
+        }
+        $this->maxAge = $maxAge;
     }
 }

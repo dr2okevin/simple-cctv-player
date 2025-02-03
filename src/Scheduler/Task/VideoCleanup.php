@@ -35,11 +35,14 @@ class VideoCleanup
         //And to not delete always from the same camera, we add some randomness to it
         shuffle($cameras);
         foreach ($cameras as $camera) {
+            $this->deleteTooOldVideos($camera, 0);
             if ($this->isCameraFolderFull($camera)) {
-                $this->deleteOldestVideo($camera);
+                $deleted = $this->deleteOldestVideos($camera, 1);
+                if ($deleted > 0) {
+                    $this->__invoke();
+                }
             }
         }
-        //@todo
     }
 
     private function isCameraFolderFull(Camera $camera): bool
@@ -54,15 +57,55 @@ class VideoCleanup
         return $freeBytes < $thresholdBytes;
     }
 
-    private function deleteOldestVideo(Camera $camera): bool
+    /**
+     * Delete the oldest videos until enough space is free
+     *
+     * @param Camera $camera
+     * @param int $limit
+     * @return int
+     */
+    private function deleteOldestVideos(Camera $camera, int $limit = 0): int
     {
         $videos = $this->videoRepository->findDeletableVideosByCamera($camera);
+        $i = 0;
         foreach ($videos as $video) {
             if ($video instanceof Video) {
-                $this->videoFileManager->deleteVideo($video->getUid());
-                return true;
+                if ($this->videoFileManager->deleteVideo($video->getUid())) {
+                    $i++;
+                }
+            }
+            if ($limit > 0 && $limit <= $i) {
+                return $i;
             }
         }
-        return false;
+        return $i;
+    }
+
+    /**
+     * @param Camera $camera
+     * @param int $limit
+     * @return int
+     */
+    private function deleteTooOldVideos(Camera $camera, int $limit = 0): int
+    {
+        if ($camera->getMaxAge() == 0) {
+            return 0;
+        }
+        $AgeLimit = new \DateInterval($camera->getMaxAge() . ' h');
+        $maxAge = new \DateTime();
+        $maxAge->sub($AgeLimit);
+        $videos = $this->videoRepository->findDeletableVideosByCameraAndAge($camera, $maxAge);
+        $i = 0;
+        foreach ($videos as $video) {
+            if ($video instanceof Video) {
+                if ($this->videoFileManager->deleteVideo($video->getUid())) {
+                    $i++;
+                }
+            }
+            if ($limit > 0 && $limit <= $i) {
+                return $i;
+            }
+        }
+        return $i;
     }
 }

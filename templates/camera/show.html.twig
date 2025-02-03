@@ -34,7 +34,7 @@
     <div class="contentBlock">
         <h2>Camera {{ camera.uid }} - {{ camera.title }}</h2>
 
-        <form action="" name="camera" method="post">
+        <form action="{{ path('show_camera', {'uid': camera.uid}) }}" name="camera-edit" method="post">
             <div class="flex-container">
                 <div class="form-element">
                     <label for="camera_title">Titel</label>
@@ -58,6 +58,12 @@
                     <input type="text" id="camera_keepFreeSpace" name="camera[keepFreeSpace]"
                            value="{{ camera.keepFreeSpace }}"
                            placeholder="1024"><span style="right:5px;position: absolute;top: 25%;">MB</span>
+                </div>
+                <div class="form-element" style="position: relative">
+                    <label for="camera_maxAge">Maximales Alter</label>
+                    <input type="text" id="camera_maxAge" name="camera[maxAge]"
+                           value="{{ camera.maxAge }}"
+                           placeholder="0"><span style="right:5px;position: absolute;top: 25%;">Stunden</span>
                 </div>
                 <div class="form-element" style="grid-column: 1 / span 2;justify-self: center;">
                     <input type="hidden" name="camera[uid]" value="{{ camera.uid }}">

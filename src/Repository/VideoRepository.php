@@ -44,5 +44,21 @@ class VideoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function findDeletableVideosByCameraAndAge(Camera $camera, \DateTime $maxTime): array
+    {
+        $folder = $camera->getVideoFolder();
+        // Wir filtern alle Videos, deren Pfad mit dem Kamera-Ordner beginnt.
+        $qb = $this->createQueryBuilder('v')
+            ->where('v.path LIKE :folder')
+            ->andWhere('v.isProtected = :protected')
+            ->andWhere('v.recordTime < :maxTimestamp')
+            ->setParameter('folder', $folder . '/%')
+            ->setParameter('protected', false)
+            ->setParameter('maxTimestamp', $maxTime)
+            ->orderBy('v.recordTime', 'ASC');
+
+        return $qb->getQuery()->getResult();
+    }
+
 
 }

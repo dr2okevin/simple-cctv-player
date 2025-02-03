@@ -1,5 +1,6 @@
 .idea
 /config/video_config.json
+TestVideos
 
 ###> symfony/framework-bundle ###
 /.env.local

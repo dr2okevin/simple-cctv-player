@@ -49,6 +49,8 @@ class CameraManager implements CameraManagerInterface
             $camera->setVideoFolder($cameraArray['videoFolder']);
             $camera->setType(CameraType::from($cameraArray['cameraType']));
             $camera->setLiveUri($cameraArray['liveUri'] ?? '');
+            $camera->setKeepFreeSpace($cameraArray['keepFreeSpace'] ?? '');
+            $camera->setMaxAge($cameraArray['maxAge'] ?? 0);
 
             $cameraObjects[] = $camera;
         }

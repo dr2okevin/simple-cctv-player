@@ -138,6 +138,8 @@ div.btn-group {
 .camera-preview-image {
     width: 100%;
     display: block;
+    min-width: 100px;
+    min-height: 100px;
 }
 
 .flex-container {
@@ -160,7 +162,11 @@ div.btn-group {
     display: inline-block;
     position: absolute;
     top: 0;
-    left: 0;
+    right: 0;
+    font-size: 40px;
+}
+.camera-controls a {
+    text-decoration: none;
 }
 
 form .flex-container {
