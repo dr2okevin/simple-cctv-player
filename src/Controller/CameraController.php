@@ -10,11 +10,8 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class CameraController extends AbstractController
 {
-    private CameraManager $cameraManager;
-
-    public function __construct(CameraManager $cameraManager)
+    public function __construct(private readonly CameraManager $cameraManager)
     {
-        $this->cameraManager = $cameraManager;
     }
 
     #[Route('/listCameras', name: 'list_cameras')]
@@ -33,6 +30,7 @@ class CameraController extends AbstractController
         if (!isset($cameras[$uid])) {
             throw $this->createNotFoundException('Camera not found');
         }
+
         $camera = $cameras[$uid];
         return $this->render('camera/show.html.twig', [
             'camera' => $camera,
@@ -46,12 +44,14 @@ class CameraController extends AbstractController
         if (!isset($cameras[$uid])) {
             throw $this->createNotFoundException('Camera not found');
         }
+
         $camera = $cameras[$uid];
         $imagePath = $this->cameraManager->getPreview($camera);
         if ($imagePath === null) {
             //@todo maybe a 500 would be better
             throw $this->createNotFoundException('Image could not be generated');
         }
+
         $response = $this->file($imagePath, basename($imagePath), ResponseHeaderBag::DISPOSITION_INLINE);
         return $response;
     }

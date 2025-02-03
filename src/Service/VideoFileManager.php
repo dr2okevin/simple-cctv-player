@@ -15,14 +15,8 @@ class VideoFileManager implements VideoFileManagerInterface
 
     protected string $thumbnailExtension = 'jpg';
 
-    protected VideoRepository $videoRepository;
-
-    protected KernelInterface $kernel;
-
-    public function __construct(VideoRepository $videoRepository, KernelInterface $kernel)
+    public function __construct(protected VideoRepository $videoRepository, protected KernelInterface $kernel)
     {
-        $this->videoRepository = $videoRepository;
-        $this->kernel = $kernel;
     }
 
     /**
@@ -37,6 +31,7 @@ class VideoFileManager implements VideoFileManagerInterface
         if ($files === false) {
             throw new \Exception('Could not read folder: ' . $folder);
         }
+
         //now we want to convert only the video files to objects
         $videoObjects = [];
         foreach ($files as $file) {
@@ -50,6 +45,7 @@ class VideoFileManager implements VideoFileManagerInterface
                     $videoObjects[] = $existingVideoObject;
                     continue;
                 }
+
                 //Must be a new file, so create a new object
                 $videoObject = new Video($fullPath, $filenameArray['filename'], $camera->getType());
                 $videoObject->setSize($this->calculateVideoSize($videoObject));
@@ -59,6 +55,7 @@ class VideoFileManager implements VideoFileManagerInterface
                 $videoObjects[] = $videoObject;
             }
         }
+
         return $videoObjects;
     }
 
@@ -78,6 +75,7 @@ class VideoFileManager implements VideoFileManagerInterface
         if ($size !== false) {
             return $size;
         }
+
         return 0;
     }
 
@@ -92,7 +90,8 @@ class VideoFileManager implements VideoFileManagerInterface
             $regex = '/(?\'year\'\d\d\d\d)(?\'month\'\d\d)(?\'day\'\d\d)(?\'hour\'\d\d)(?\'minute\'\d\d)(?\'second\'\d\d)/m';
             preg_match($regex, $filename, $matches);
         }
-        if (isset($matches) && !empty($matches)) {
+
+        if (isset($matches) && $matches !== []) {
             $timeString = sprintf(
                 '%s-%s-%s %s:%s:%s',
                 $matches['year'],
@@ -104,6 +103,7 @@ class VideoFileManager implements VideoFileManagerInterface
             );
             return new \DateTime($timeString);
         }
+
         //Fallback if regex didn't work
         $fileTime = filectime($path);
         return new \DateTime(@$fileTime);
@@ -116,9 +116,10 @@ class VideoFileManager implements VideoFileManagerInterface
             $command = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($path);
             $duration = exec($command);
             if ($duration !== false && is_numeric($duration)) {
-                return round($duration, 0);
+                return (int)round($duration, 0);
             }
         }
+
         return 0;
     }
 
@@ -134,6 +135,7 @@ class VideoFileManager implements VideoFileManagerInterface
         if (!is_dir($thumbnailDir)) {
             mkdir($thumbnailDir, 0774, true);
         }
+
         $path = $thumbnailDir . $uid . '.' . $this->thumbnailExtension;
         return $path;
     }
@@ -146,6 +148,7 @@ class VideoFileManager implements VideoFileManagerInterface
             if (!$video instanceof Video) {
                 return null;
             }
+
             $halfVideoTime = (int)round($video->getDuration() / 2, 0);
             $command = 'ffmpeg -i ' . escapeshellarg(realpath($video->getPath())) . ' -ss ' . $halfVideoTime . ' -frames:v 1 ' . escapeshellarg($path);
             exec($command, $output, $returnVar);
@@ -154,6 +157,7 @@ class VideoFileManager implements VideoFileManagerInterface
             }
 
         }
+
         return $path;
     }
 
@@ -172,19 +176,16 @@ class VideoFileManager implements VideoFileManagerInterface
 
         //Delete the original file
         $videoPath = $video->getPath();
-        if (file_exists($videoPath)) {
-            if (!unlink($videoPath)) {
-                return false;
-            }
+        if (file_exists($videoPath) && !unlink($videoPath)) {
+            return false;
         }
 
         //Delte Thumbnail
         $thumbnailPath = $this->getThumbnailPath($uid);
-        if (file_exists($thumbnailPath)) {
-            if (!unlink($thumbnailPath)) {
-                return false;
-            }
+        if (file_exists($thumbnailPath) && !unlink($thumbnailPath)) {
+            return false;
         }
+
         $this->videoRepository->remove($video);
         return true;
     }

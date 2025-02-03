@@ -6,7 +6,7 @@ use App\Enum\CameraType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: "App\Repository\VideoRepository")]
+#[ORM\Entity(repositoryClass: \App\Repository\VideoRepository::class)]
 #[ORM\Table(name: "videos")]
 class Video
 {
@@ -30,10 +30,10 @@ class Video
     protected \DateTime $recordTime;
 
     #[ORM\Column(type: "integer", nullable: true)]
-    protected ?int $size;
+    protected ?int $size = null;
 
     #[ORM\Column(type: "integer", nullable: true)]
-    protected ?int $duration;
+    protected ?int $duration = null;
 
     public function __construct(string $path, string $title, CameraType $cameraType)
     {

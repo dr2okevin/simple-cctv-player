@@ -134,6 +134,7 @@ class Camera
             $this->keepFreeSpace = $keepFreeSpace;
             return;
         }
+
         $keepFreeSpace = strtolower(trim($keepFreeSpace));
 
         //What unit is it?
@@ -160,6 +161,7 @@ class Camera
                     // Is already MB or unknown
                     break;
             }
+
             $this->keepFreeSpace = (int)round($numeric);
         }
     }
@@ -177,9 +179,10 @@ class Camera
      */
     public function setMaxAge(int|string $maxAge): void
     {
-        if(is_string($maxAge)){
+        if (is_string($maxAge)) {
             $maxAge = (int)$maxAge;
         }
+
         $this->maxAge = $maxAge;
     }
 }

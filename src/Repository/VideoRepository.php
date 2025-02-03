@@ -24,7 +24,7 @@ class VideoRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
-    public function remove(Video $video)
+    public function remove(Video $video): void
     {
         $this->getEntityManager()->remove($video);
         $this->getEntityManager()->flush();

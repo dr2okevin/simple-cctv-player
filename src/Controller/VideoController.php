@@ -16,19 +16,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class VideoController extends AbstractController
 {
-    private CameraManager $cameraManager;
+    private readonly Request $request;
 
-    private VideoFileManager $videoFileManager;
-
-    private Request $request;
-
-    private VideoRepository $videoRepository;
-
-    public function __construct(CameraManager $cameraManager, VideoFileManager $videoFileManager, VideoRepository $videoRepository)
+    public function __construct(private readonly CameraManager $cameraManager, private readonly VideoFileManager $videoFileManager, private readonly VideoRepository $videoRepository)
     {
-        $this->videoFileManager = $videoFileManager;
-        $this->cameraManager = $cameraManager;
-        $this->videoRepository = $videoRepository;
         $this->request = Request::createFromGlobals();
     }
 
@@ -44,11 +35,13 @@ class VideoController extends AbstractController
                 } elseif ($protected === 'false' || $protected === '0' || $protected === false) {
                     $video->setIsProtected(false);
                 }
+
                 $this->videoRepository->save($video);
             }
         }
+
         if (isset($this->request->request->all()['submission_method']) && $this->request->request->all()['submission_method'] == 'js') {
-            return new Response(null, 204);
+            return new Response(null, \Symfony\Component\HttpFoundation\Response::HTTP_NO_CONTENT);
         }
 
         $cameras = $this->cameraManager->getCameras();
@@ -56,6 +49,7 @@ class VideoController extends AbstractController
         foreach ($cameras as $camera) {
             $videos = array_merge($videos, $this->videoFileManager->getVideos($camera));
         }
+
         return $this->render('video/list.html.twig', [
             'videos' => $videos,
         ]);
@@ -73,9 +67,10 @@ class VideoController extends AbstractController
     {
         $video = $this->videoFileManager->findVideoByUid($uid);
 
-        if (!$video) {
+        if (!$video instanceof \App\Entity\Video) {
             throw $this->createNotFoundException('Video not found');
         }
+
         $filePath = $video->getPath();
 
         if (!file_exists($filePath)) {
@@ -88,6 +83,7 @@ class VideoController extends AbstractController
                 echo fread($stream, 1024 * 8);
                 flush();
             }
+
             fclose($stream);
         });
         $response->headers->set('Content-Disposition', 'inline; filename="' . basename($filePath) . '"');
@@ -100,14 +96,16 @@ class VideoController extends AbstractController
     {
         $video = $this->videoFileManager->findVideoByUid($uid);
 
-        if (!$video) {
+        if (!$video instanceof \App\Entity\Video) {
             throw $this->createNotFoundException('Video not found');
         }
+
         $filePath = $video->getPath();
 
         if (!file_exists($filePath)) {
             throw $this->createNotFoundException('File not found');
         }
+
         $response = $this->file($filePath, basename($filePath), ResponseHeaderBag::DISPOSITION_ATTACHMENT);
         $response->headers->set('Cache-Control', 'max-age=31536000, immutable');
         return $response;
@@ -134,6 +132,7 @@ class VideoController extends AbstractController
         if ($thumbnail === null) {
             throw $this->createNotFoundException('File not found');
         }
+
         $response = $this->file($thumbnail, basename($thumbnail), ResponseHeaderBag::DISPOSITION_ATTACHMENT);
         $response->headers->set('Cache-Control', 'max-age=31536000, immutable');
         return $response;

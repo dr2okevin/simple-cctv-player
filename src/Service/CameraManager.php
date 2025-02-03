@@ -8,14 +8,8 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 class CameraManager implements CameraManagerInterface
 {
-    private string $configPath;
-
-    protected KernelInterface $kernel;
-
-    public function __construct(string $configPath, KernelInterface $kernel)
+    public function __construct(private readonly string $configPath, protected KernelInterface $kernel)
     {
-        $this->configPath = $configPath;
-        $this->kernel = $kernel;
     }
 
     /**
@@ -66,18 +60,22 @@ class CameraManager implements CameraManagerInterface
         if (!file_exists($imageDir)) {
             mkdir($imageDir, 0774, true);
         }
+
         $imagePath = $imageDir . "Camera_" . $camera->getUid() . ".jpg";
         if (file_exists($imagePath) && filectime($imagePath) >= time() - $cacheTime) {
             return $imagePath;
         }
+
         if (empty($camera->getLiveUri())) {
             return null;
         }
+
         $ffmpegCommand = "ffmpeg -y -i " . escapeshellarg($camera->getLiveUri()) . " -vframes 1 -rtsp_transport tcp " . escapeshellarg($imagePath);
         exec($ffmpegCommand, $output, $returnVar);
         if ($returnVar !== 0) {
             return null;
         }
+
         return $imagePath;
     }
 

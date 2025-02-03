@@ -15,20 +15,11 @@ use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 #[AsPeriodicTask(frequency: 600)]
 class VideoCleanup
 {
-    private CameraManager $cameraManager;
-
-    private VideoFileManager $videoFileManager;
-
-    private VideoRepository $videoRepository;
-
-    public function __construct(CameraManager $cameraManager, VideoFileManager $videoFileManager, VideoRepository $videoRepository)
+    public function __construct(private readonly CameraManager $cameraManager, private readonly VideoFileManager $videoFileManager, private readonly VideoRepository $videoRepository)
     {
-        $this->cameraManager = $cameraManager;
-        $this->videoFileManager = $videoFileManager;
-        $this->videoRepository = $videoRepository;
     }
 
-    public function __invoke()
+    public function __invoke(): void
     {
         $cameras = $this->cameraManager->getCameras();
         //We don't know if cameras share the same file system, so we check all.
@@ -52,6 +43,7 @@ class VideoCleanup
             // looks like the folder dosen't exist
             return false;
         }
+
         $freeBytes = disk_free_space($folder);
         $thresholdBytes = $camera->getKeepFreeSpace() * 1048576; // MB in Bytes
         return $freeBytes < $thresholdBytes;
@@ -69,15 +61,15 @@ class VideoCleanup
         $videos = $this->videoRepository->findDeletableVideosByCamera($camera);
         $i = 0;
         foreach ($videos as $video) {
-            if ($video instanceof Video) {
-                if ($this->videoFileManager->deleteVideo($video->getUid())) {
-                    $i++;
-                }
+            if ($video instanceof Video && $this->videoFileManager->deleteVideo($video->getUid())) {
+                $i++;
             }
+
             if ($limit > 0 && $limit <= $i) {
                 return $i;
             }
         }
+
         return $i;
     }
 
@@ -91,21 +83,23 @@ class VideoCleanup
         if ($camera->getMaxAge() == 0) {
             return 0;
         }
+
         $AgeLimit = new \DateInterval($camera->getMaxAge() . ' h');
         $maxAge = new \DateTime();
         $maxAge->sub($AgeLimit);
+
         $videos = $this->videoRepository->findDeletableVideosByCameraAndAge($camera, $maxAge);
         $i = 0;
         foreach ($videos as $video) {
-            if ($video instanceof Video) {
-                if ($this->videoFileManager->deleteVideo($video->getUid())) {
-                    $i++;
-                }
+            if ($video instanceof Video && $this->videoFileManager->deleteVideo($video->getUid())) {
+                $i++;
             }
+
             if ($limit > 0 && $limit <= $i) {
                 return $i;
             }
         }
+
         return $i;
     }
 }
