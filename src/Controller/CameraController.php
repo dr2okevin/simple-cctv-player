@@ -2,16 +2,22 @@
 
 namespace App\Controller;
 
+use App\Entity\Camera;
+use App\Enum\CameraType;
 use App\Service\CameraManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 
 class CameraController extends AbstractController
 {
+    private readonly Request $request;
+
     public function __construct(private readonly CameraManager $cameraManager)
     {
+        $this->request = Request::createFromGlobals();
     }
 
     #[Route('/listCameras', name: 'list_cameras')]
@@ -32,6 +38,17 @@ class CameraController extends AbstractController
         }
 
         $camera = $cameras[$uid];
+
+        if (isset($this->request->request->all()['camera'])) {
+            $camera->setTitle($this->request->request->all('camera')['title']);
+            $camera->setVideoFolder($this->request->request->all('camera')['videoFolder']);
+            $camera->setType(CameraType::from($this->request->request->all('camera')['type']));
+            $camera->setLiveUri($this->request->request->all('camera')['liveUri']);
+            $camera->setKeepFreeSpace($this->request->request->all('camera')['keepFreeSpace']);
+            $camera->setMaxAge($this->request->request->all('camera')['maxAge']);
+            $this->cameraManager->updateCamera($camera);
+        }
+
         return $this->render('camera/show.html.twig', [
             'camera' => $camera,
         ]);

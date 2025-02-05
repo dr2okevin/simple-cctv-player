@@ -19,7 +19,8 @@ class CameraManager implements CameraManagerInterface
     {
         if (!file_exists($this->configPath)) {
             $json = json_encode([]);
-            file_get_contents($json);
+            $file = fopen($this->configPath, 'w');
+            fwrite($file, $json);
         }
 
         if (!file_exists($this->configPath) || !is_readable($this->configPath)) {
@@ -46,7 +47,7 @@ class CameraManager implements CameraManagerInterface
             $camera->setKeepFreeSpace($cameraArray['keepFreeSpace'] ?? '');
             $camera->setMaxAge($cameraArray['maxAge'] ?? 0);
 
-            $cameraObjects[] = $camera;
+            $cameraObjects[$uid] = $camera;
         }
 
         return $cameraObjects;
@@ -77,6 +78,42 @@ class CameraManager implements CameraManagerInterface
         }
 
         return $imagePath;
+    }
+
+    public function updateCamera(Camera $camera): bool
+    {
+        $cameras = $this->getCameras();
+        $cameras[$camera->getUid()] = $camera;
+        return $this->writeCameraSettings($cameras);
+    }
+
+    /**
+     * @param Camera[] $cameras
+     * @return bool
+     */
+    protected function writeCameraSettings(array $cameras): bool
+    {
+        foreach ($cameras as $camera) {
+            $cameras[$camera->getUid()] = [
+                'title' => $camera->getTitle(),
+                'videoFolder' => $camera->getVideoFolder(),
+                'cameraType' => $camera->getType()->value,
+                'liveUri' => $camera->getLiveUri(),
+                'keepFreeSpace' => $camera->getKeepFreeSpace(),
+                'maxAge' => $camera->getMaxAge()
+            ];
+        }
+        $cameras = ['cameras' => $cameras];
+        $configString = json_encode($cameras, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($configString === false) {
+            return false;
+        }
+        $file = fopen($this->configPath, 'w');
+        $writeRet = fwrite($file, $configString);
+        if ($writeRet === false) {
+            return false;
+        }
+        return true;
     }
 
 }
