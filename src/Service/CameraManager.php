@@ -103,17 +103,16 @@ class CameraManager implements CameraManagerInterface
                 'maxAge' => $camera->getMaxAge()
             ];
         }
+
         $cameras = ['cameras' => $cameras];
         $configString = json_encode($cameras, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($configString === false) {
             return false;
         }
+
         $file = fopen($this->configPath, 'w');
         $writeRet = fwrite($file, $configString);
-        if ($writeRet === false) {
-            return false;
-        }
-        return true;
+        return $writeRet !== false;
     }
 
 }

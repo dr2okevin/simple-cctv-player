@@ -26,7 +26,6 @@ class VideoController extends AbstractController
     #[Route('/listVideos', name: 'list_videos')]
     public function listVideos(): Response
     {
-
         foreach ($this->request->request->all('protected') as $videoUid => $protected) {
             $video = $this->videoRepository->findOneByUid($videoUid);
             if ($video instanceof Video) {
@@ -40,8 +39,23 @@ class VideoController extends AbstractController
             }
         }
 
+        foreach (array_keys($this->request->request->all('delete')) as $videoUid) {
+            $video = $this->videoRepository->findOneByUid($videoUid);
+            if ($video instanceof Video) {
+                if ($video->isProtected()) {
+                    return new Response(null, Response::HTTP_FORBIDDEN);
+                } elseif ($this->videoFileManager->deleteVideo($videoUid)) {
+                    return new Response(null, Response::HTTP_NO_CONTENT);
+                } else {
+                    return new Response(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+            } else {
+                return new Response(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        }
+
         if (isset($this->request->request->all()['submission_method']) && $this->request->request->all()['submission_method'] == 'js') {
-            return new Response(null, \Symfony\Component\HttpFoundation\Response::HTTP_NO_CONTENT);
+            return new Response(null, Response::HTTP_NO_CONTENT);
         }
 
         $cameras = $this->cameraManager->getCameras();
@@ -111,19 +125,19 @@ class VideoController extends AbstractController
         return $response;
     }
 
-    #[Route('/video/{uid}/lock', name: 'video_lock')]
-    public function lockVideo(Video $video): Response
-    {
-        $video->setIsProtected(true);
-        return new Response('video locked');
-    }
-
-    #[Route('/video/{uid}/lock', name: 'video_unlock')]
-    public function unlockVideo(Video $video): Response
-    {
-        $video->setIsProtected(false);
-        return new Response('video unlocked');
-    }
+//    #[Route('/video/{uid}/lock', name: 'video_lock')]
+//    public function lockVideo(Video $video): Response
+//    {
+//        $video->setIsProtected(true);
+//        return new Response('video locked');
+//    }
+//
+//    #[Route('/video/{uid}/unlock', name: 'video_unlock')]
+//    public function unlockVideo(Video $video): Response
+//    {
+//        $video->setIsProtected(false);
+//        return new Response('video unlocked');
+//    }
 
     #[Route('/video/{uid}/thumbnail', name: 'video_thumbnail')]
     public function videoThumbnail(string $uid): Response
