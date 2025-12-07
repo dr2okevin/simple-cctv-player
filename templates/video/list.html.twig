@@ -115,5 +115,10 @@
                 </tr>
             {% endfor %}
         </table>
+        <nav class="pagination">
+            {% for p in 1..pages %}
+                <a href="{{ path('list_videos', app.request.query.all|merge({page: p})) }}">{{ p }}</a>
+            {% endfor %}
+        </nav>
     </div>
 {% endblock %}
