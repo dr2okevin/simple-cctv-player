@@ -44,13 +44,16 @@ table {
 table.video-list {
     width: 100%;
 }
+
 table.video-list video {
     border: 1px solid black;
     display: inline-block;
 }
+
 table.video-list td.title {
     border-left: 0;
 }
+
 table.video-list td.video {
     border-right: 0;
 }
@@ -85,6 +88,7 @@ div.header div.nav {
     width: 100%;
     text-align: center;
 }
+
 ul.nav {
     display: flex;
     gap: 10px;
@@ -104,8 +108,8 @@ ul.nav li a {
     text-decoration: none;
     font-weight: 600;
     font-size: 14px;
-    color: #004a7c;
-    border-radius: 0px;
+    color: #000000;
+    border-radius: 0;
 
     /* Verlauf von Weiß zu transparentem Blau */
     background: linear-gradient(180deg,
@@ -118,11 +122,8 @@ ul.nav li a {
     backdrop-filter: blur(5px);
 
     /* Rahmen & Glanz-Effekte */
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow:
-            0 4px 6px rgba(0, 0, 0, 0.1),         /* Schatten unten für Tiefe */
-            inset 0 1px 0 rgba(255, 255, 255, 1), /* Harte Lichtkante oben (Highlight) */
-            inset 0 -1px 2px rgba(0, 0, 0, 0.05); /* Leichter Schatten innen unten */
+    border: 1px solid #000000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), /* Schatten unten für Tiefe */ inset 0 1px 0 rgba(255, 255, 255, 1), /* Harte Lichtkante oben (Highlight) */ inset 0 -1px 2px rgba(0, 0, 0, 0.05); /* Leichter Schatten innen unten */
 
     /* Animation für Interaktion */
     transition: all 0.2s ease;
@@ -133,9 +134,7 @@ ul.nav li a:hover {
     background: linear-gradient(180deg,
     rgba(255, 255, 255, 1) 0%,
     rgba(235, 245, 255, 0.8) 100%);
-    box-shadow:
-            0 0 10px rgba(100, 200, 255, 0.4), /* Äußerer Schein (Glow) */
-            inset 0 1px 0 rgba(255, 255, 255, 1);
+    box-shadow: 0 0 10px rgba(100, 200, 255, 0.4), /* Äußerer Schein (Glow) */ inset 0 1px 0 rgba(255, 255, 255, 1);
     color: #0066cc; /* Helleres Blau */
 }
 
@@ -155,8 +154,8 @@ ul.nav li a:active {
     margin: 2px;
     padding-left: 50px;
     padding-right: 50px;
-    border: 1px solid rgba(255,255,255,0.7) ;
-    background-color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background-color: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(20px);
     color: black;
     text-decoration: none;
@@ -165,6 +164,7 @@ ul.nav li a:active {
     vertical-align: middle;
     box-shadow: 0 0 1em 0.5em rgba(55, 55, 55, 0.45);
 }
+
 .btn:hover {
     background-color: #fff;
 }
@@ -176,6 +176,7 @@ ul.nav li a:active {
     cursor: pointer;
     border-left: none;
 }
+
 .btn.btn-group:first-child {
     border-left: 1px solid white;
 }
@@ -186,6 +187,7 @@ div.btn-group {
     margin: 2px;
     padding: 0;
 }
+
 .btn-disabled, .btn.btn-group.btn-disabled {
     cursor: not-allowed;
 }
@@ -205,6 +207,7 @@ div.btn-group {
     align-items: center;
     align-content: center;
 }
+
 .camera-container {
     display: block;
     width: 100%;
@@ -213,6 +216,7 @@ div.btn-group {
     position: relative;
     margin: 10px;
 }
+
 .camera-controls {
     display: inline-block;
     position: absolute;
@@ -220,6 +224,7 @@ div.btn-group {
     right: 0;
     font-size: 40px;
 }
+
 .camera-controls a {
     text-decoration: none;
 }
@@ -228,10 +233,12 @@ form .flex-container {
     display: grid;
     gap: 8px;
 }
+
 .flex-container .form-element {
     display: grid;
     grid-template-columns: 1fr 2fr;
 }
+
 @media screen and (min-width: 800px) {
     form .flex-container {
         grid-template-columns: 1fr 1fr;
