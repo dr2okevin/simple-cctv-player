@@ -35,7 +35,7 @@ class CameraManager implements CameraManagerInterface
 
         $cameraObjects = [];
         /**
-         * @var array{title: string, videoFolder: string, cameraType: string, liveUri: ?string} $cameraArray
+         * @var array{title: string, videoFolder: string, cameraType: string, liveUri: ?string, keepFreeSpace: ?string} $cameraArray
          */
         foreach ($cameraArrays['cameras'] as $uid => $cameraArray) {
             $camera = new Camera();

@@ -63,9 +63,25 @@ class VideoController extends AbstractController
         foreach ($cameras as $camera) {
             $videos = array_merge($videos, $this->videoFileManager->getVideos($camera));
         }
+        usort($videos, function ($a, $b){
+            return $b->getRecordTime()->getTimestamp() - $a->getRecordTime()->getTimestamp();
+        });
+
+        // Pagination
+        $page = max(1, $this->request->query->getInt('page', 1));
+        $perPage = 10;
+
+        $total = count($videos);
+        $pages = (int) max(1, ceil($total / $perPage));
+        $page = min($page, $pages);
+
+        $videos = array_slice($videos, ($page - 1) * $perPage, $perPage);
 
         return $this->render('video/list.html.twig', [
             'videos' => $videos,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
         ]);
     }
 
