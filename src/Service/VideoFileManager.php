@@ -32,6 +32,9 @@ class VideoFileManager implements VideoFileManagerInterface
             throw new \Exception('Could not read folder: ' . $folder);
         }
 
+        //get all video IDs from the database
+        $existingUids = $this->videoRepository->findAllUidsByCamera($camera);
+
         //now we want to convert only the video files to objects
         $videoObjects = [];
         foreach ($files as $file) {
@@ -39,11 +42,13 @@ class VideoFileManager implements VideoFileManagerInterface
             if (isset($filenameArray['extension']) && in_array($filenameArray['extension'], $this->videoExtensions)) {
                 $fullPath = $folder . '/' . $file;
                 $uid = Video::calculateUid($fullPath);
-                $existingVideoObject = $this->videoRepository->findOneByUid($uid);
-                if (isset($existingVideoObject) && $existingVideoObject instanceof Video) {
-                    //We found a video object in the Database
-                    $videoObjects[] = $existingVideoObject;
-                    continue;
+                if(in_array($uid, $existingUids)) {
+                    $existingVideoObject = $this->videoRepository->findOneByUid($uid);
+                    if (isset($existingVideoObject) && $existingVideoObject instanceof Video) {
+                        //We found a video object in the Database
+                        $videoObjects[] = $existingVideoObject;
+                        continue;
+                    }
                 }
 
                 //Must be a new file, so create a new object

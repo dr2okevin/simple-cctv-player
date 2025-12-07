@@ -60,5 +60,17 @@ class VideoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function findAllUidsByCamera(Camera $camera)
+    {
+        $folder = $camera->getVideoFolder();
+        $qb = $this->createQueryBuilder('v')
+            ->select('v.uid')
+            ->where('v.path LIKE :folder')
+            ->setParameter('folder', $folder . '/%')
+            ->orderBy('v.recordTime', 'ASC');
+
+        return $qb->getQuery()->getSingleColumnResult();
+    }
+
 
 }
