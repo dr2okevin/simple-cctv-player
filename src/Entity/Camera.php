@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Enum\CameraType;
+use App\Service\CameraApiInterface;
+use App\Service\ReolinkApiService;
 
 class Camera
 {
@@ -15,6 +17,8 @@ class Camera
     protected CameraType $type;
 
     protected string $liveUri;
+
+    protected ?CameraApiSettings $cameraApiSettings = null;
 
     /**
      * @var int|null how much space in MB should be kept free
@@ -184,5 +188,33 @@ class Camera
         }
 
         $this->maxAge = $maxAge;
+    }
+
+    /**
+     * @return CameraApiSettings|null
+     */
+    public function getCameraApiSettings(): ?CameraApiSettings
+    {
+        return $this->cameraApiSettings;
+    }
+
+    /**
+     * @param CameraApiSettings|null $cameraApiSettings
+     */
+    public function setCameraApiSettings(?CameraApiSettings $cameraApiSettings): void
+    {
+        $this->cameraApiSettings = $cameraApiSettings;
+    }
+
+    public function getCameraApi(): ?CameraApiInterface
+    {
+        if (!$this->getCameraApiSettings()) {
+            return null;
+        }
+        switch ($this->getCameraApiSettings()->getType()) {
+            case "reolink";
+                return new ReolinkApiService($this->getCameraApiSettings());
+        }
+        return null;
     }
 }

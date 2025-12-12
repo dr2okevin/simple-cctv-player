@@ -94,6 +94,9 @@ class VideoFileManager implements VideoFileManagerInterface
         } elseif ($video->getCameraType() == CameraType::Reolink) {
             $regex = '/(?\'year\'\d\d\d\d)(?\'month\'\d\d)(?\'day\'\d\d)(?\'hour\'\d\d)(?\'minute\'\d\d)(?\'second\'\d\d)/m';
             preg_match($regex, $filename, $matches);
+        } elseif ($video->getCameraType() == CameraType::Annke) {
+            $regex = '/(?\'year\'\d\d\d\d)(?\'month\'\d\d)(?\'day\'\d\d)(?\'hour\'\d\d)(?\'minute\'\d\d)(?\'second\'\d\d)/m';
+            preg_match($regex, $filename, $matches);
         }
 
         if (isset($matches) && $matches !== []) {

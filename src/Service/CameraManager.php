@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Camera;
+use App\Entity\CameraApiSettings;
 use App\Enum\CameraType;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -46,6 +47,10 @@ class CameraManager implements CameraManagerInterface
             $camera->setLiveUri($cameraArray['liveUri'] ?? '');
             $camera->setKeepFreeSpace($cameraArray['keepFreeSpace'] ?? '');
             $camera->setMaxAge($cameraArray['maxAge'] ?? 0);
+
+            if(isset($cameraArray['cameraApi'])){
+                $camera->setCameraApiSettings(new CameraApiSettings($cameraArray['cameraApi']));
+            }
 
             $cameraObjects[$uid] = $camera;
         }

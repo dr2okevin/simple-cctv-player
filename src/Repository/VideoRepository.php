@@ -72,5 +72,18 @@ class VideoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getSingleColumnResult();
     }
 
+    public function findLatestVideoByCamera(mixed $camera): Video
+    {
+        $folder = $camera->getVideoFolder();
+        $qb = $this->createQueryBuilder('v')
+            ->select('v')
+            ->where('v.path LIKE :folder')
+            ->setParameter('folder', $folder . '/%')
+            ->setMaxResults(1)
+            ->orderBy('v.recordTime', 'ASC');
+
+        return $qb->getQuery()->getSingleResult();
+    }
+
 
 }

@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Camera;
 use App\Enum\CameraType;
+use App\Repository\VideoRepository;
 use App\Service\CameraManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -15,7 +17,7 @@ class CameraController extends AbstractController
 {
     private readonly Request $request;
 
-    public function __construct(private readonly CameraManager $cameraManager)
+    public function __construct(private readonly CameraManager $cameraManager, private readonly VideoRepository $videoRepository)
     {
         $this->request = Request::createFromGlobals();
     }
@@ -71,5 +73,43 @@ class CameraController extends AbstractController
 
         $response = $this->file($imagePath, basename($imagePath), ResponseHeaderBag::DISPOSITION_INLINE);
         return $response;
+    }
+
+    #[Route('/api/camera/{uid}/getLastRecordingTime', name: 'api_get_last_recording_time')]
+    public function apiGetLastRecordingTime(int $uid): JsonResponse
+    {
+        $cameras = $this->cameraManager->getCameras();
+        if (!isset($cameras[$uid])) {
+            throw $this->createNotFoundException('Camera not found');
+        }
+
+        $camera = $cameras[$uid];
+
+        $latestVideo = $this->videoRepository->findLatestVideoByCamera($camera);
+        return $this->json($latestVideo->getRecordTime());
+    }
+
+    #[Route('/api/camera/{uid}/enableSirene', name: 'api_enable_sirene')]
+    public function apiEnableSirene(int $uid): JsonResponse
+    {
+        $cameras = $this->cameraManager->getCameras();
+        if (!isset($cameras[$uid])) {
+            throw $this->createNotFoundException('Camera not found');
+        }
+
+        $camera = $cameras[$uid];
+        $api = $camera->getCameraApi();
+        if ($api) {
+            $response = $this->json($api->enableSiren());
+        } else {
+            $response = $this->json(false)->setStatusCode(500);
+        }
+        return $response;
+    }
+
+    #[Route('/api/camera/{uid}/disableSirene', name: 'api_disable_sirene')]
+    public function apiDisableSirene(int $uid): JsonResponse
+    {
+        return $this->json();
     }
 }
