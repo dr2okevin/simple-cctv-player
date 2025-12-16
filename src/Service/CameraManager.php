@@ -6,6 +6,8 @@ use App\Entity\Camera;
 use App\Entity\CameraApiSettings;
 use App\Enum\CameraType;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Process\Process;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CameraManager implements CameraManagerInterface
 {
@@ -76,13 +78,70 @@ class CameraManager implements CameraManagerInterface
             return null;
         }
 
-        $ffmpegCommand = "ffmpeg -y -i " . escapeshellarg($camera->getLiveUri()) . " -vframes 1 -rtsp_transport tcp " . escapeshellarg($imagePath);
-        exec($ffmpegCommand, $output, $returnVar);
-        if ($returnVar !== 0) {
+        $cmd = [
+            'ffmpeg',
+            '-hide_banner', '-loglevel', 'error', '-nostdin',
+            '-y',
+            '-rtsp_transport', 'tcp',            // MUST be before -i
+            '-stimeout', '5000000',              // 5s (microseconds) for RTSP connect/read
+            '-i', $camera->getLiveUri(),
+            '-an', '-sn', '-dn',
+            '-skip_frame', 'nokey',              // only keyframes (avoids missing refs)
+            '-frames:v', '1',
+            $imagePath,
+        ];
+
+        $process = new Process($cmd);
+        $process->setTimeout(8);
+        $process->run();
+
+        if(!$process->isSuccessful()){
+            return null;
+        }
+        return $imagePath;
+    }
+
+    public function liveMp4(Camera $camera): ?StreamedResponse
+    {
+        $uri = $camera->getLiveUri();
+        if (!$uri) {
             return null;
         }
 
-        return $imagePath;
+        $cmd = [
+            'ffmpeg',
+            '-hide_banner', '-loglevel', 'error', '-nostdin',
+            '-stimeout', '5000000',                 // 5s (microseconds)
+            '-i', $uri,
+            '-c:v', 'copy',                          // no re-encode
+            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+            '-f', 'mp4',
+            'pipe:1',
+        ];
+
+        $process = new Process($cmd);
+        $process->setTimeout(null);
+
+        $response = new StreamedResponse(function () use ($process) {
+            // Push ffmpeg stdout to client
+            $process->start(function (string $type, string $buffer) {
+                if ($type === Process::OUT) {
+                    echo $buffer;
+                    @ob_flush();
+                    flush();
+                }
+            });
+
+            $process->wait(); // blocks until client disconnects/ffmpeg exits
+        });
+
+        $response->headers->set('Content-Type', 'video/mp4');
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        // If you're behind nginx, disable buffering for low latency
+        $response->headers->set('X-Accel-Buffering', 'no');
+
+        return $response;
     }
 
     public function updateCamera(Camera $camera): bool

@@ -79,11 +79,6 @@ class ReolinkApiService implements CameraApiInterface
                 'channel' => $this->channel,
             ];
 
-            // Optional; some examples include it. Keep it only when turning on.
-            if ($enabled) {
-                $param['times'] = 1;
-            }
-
             $payload = [[
                 'cmd' => 'AudioAlarmPlay',
                 'action' => 0,
@@ -93,7 +88,7 @@ class ReolinkApiService implements CameraApiInterface
             $resp = $this->post('AudioAlarmPlay', $payload, $token);
 
             return $this->isCmdOk($resp, 'AudioAlarmPlay');
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
             return false;
         }
     }

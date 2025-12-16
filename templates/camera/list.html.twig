@@ -39,7 +39,7 @@
 
                 <div class="camera-container">
                     <div class="camera-preview">
-                        <a href="{{ camera.liveUri }}"><img class="camera-preview-image" src="{{ path('show_camera_preview', {uid: camera.uid}) }}" alt="{{ camera.title }}" ></a>
+                        <a href="{{ path('show_camera_stream', {uid: camera.uid}) }}"><img class="camera-preview-image" src="{{ path('show_camera_preview', {uid: camera.uid}) }}" alt="{{ camera.title }}" ></a>
                     </div>
                     <div class="camera-controls">
                             <a href="{{ path('show_camera', {uid: camera.uid}) }}" title="Edit camera {{ camera.uid }}">&#9881;&#65039;</a>

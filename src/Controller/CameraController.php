@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 class CameraController extends AbstractController
@@ -72,7 +73,20 @@ class CameraController extends AbstractController
         }
 
         $response = $this->file($imagePath, basename($imagePath), ResponseHeaderBag::DISPOSITION_INLINE);
+        $response->headers->addCacheControlDirective('no-cache', true);
         return $response;
+    }
+
+    #[Route('/camera/{uid}/stream', name: 'show_camera_stream')]
+    public function streamCamera(int $uid): StreamedResponse|Response
+    {
+        $cameras = $this->cameraManager->getCameras();
+        if (!isset($cameras[$uid])) {
+            throw $this->createNotFoundException('Camera not found');
+        }
+
+        $camera = $cameras[$uid];
+        return $this->cameraManager->liveMp4($camera);
     }
 
     #[Route('/api/camera/{uid}/getLastRecordingTime', name: 'api_get_last_recording_time')]
@@ -86,7 +100,9 @@ class CameraController extends AbstractController
         $camera = $cameras[$uid];
 
         $latestVideo = $this->videoRepository->findLatestVideoByCamera($camera);
-        return $this->json($latestVideo->getRecordTime());
+        $response = $this->json($latestVideo->getRecordTime());
+        $response->headers->addCacheControlDirective('no-cache', true);
+        return $response;
     }
 
     #[Route('/api/camera/{uid}/enableSirene', name: 'api_enable_sirene')]
@@ -104,12 +120,26 @@ class CameraController extends AbstractController
         } else {
             $response = $this->json(false)->setStatusCode(500);
         }
+        $response->headers->addCacheControlDirective('no-cache', true);
         return $response;
     }
 
     #[Route('/api/camera/{uid}/disableSirene', name: 'api_disable_sirene')]
     public function apiDisableSirene(int $uid): JsonResponse
     {
-        return $this->json();
+        $cameras = $this->cameraManager->getCameras();
+        if (!isset($cameras[$uid])) {
+            throw $this->createNotFoundException('Camera not found');
+        }
+
+        $camera = $cameras[$uid];
+        $api = $camera->getCameraApi();
+        if ($api) {
+            $response = $this->json($api->disableSiren());
+        } else {
+            $response = $this->json(false)->setStatusCode(500);
+        }
+        $response->headers->addCacheControlDirective('no-cache', true);
+        return $response;
     }
 }
