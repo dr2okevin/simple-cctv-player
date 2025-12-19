@@ -8,10 +8,11 @@ use App\Enum\CameraType;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Process\Process;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Psr\Log\LoggerInterface;
 
 class CameraManager implements CameraManagerInterface
 {
-    public function __construct(private readonly string $configPath, protected KernelInterface $kernel)
+    public function __construct(private readonly string $configPath, protected KernelInterface $kernel, private readonly LoggerInterface $logger)
     {
     }
 
@@ -50,7 +51,7 @@ class CameraManager implements CameraManagerInterface
             $camera->setKeepFreeSpace($cameraArray['keepFreeSpace'] ?? '');
             $camera->setMaxAge($cameraArray['maxAge'] ?? 0);
 
-            if(isset($cameraArray['cameraApi'])){
+            if (isset($cameraArray['cameraApi'])) {
                 $camera->setCameraApiSettings(new CameraApiSettings($cameraArray['cameraApi']));
             }
 
@@ -83,19 +84,26 @@ class CameraManager implements CameraManagerInterface
             '-hide_banner', '-loglevel', 'error', '-nostdin',
             '-y',
             '-rtsp_transport', 'tcp',            // MUST be before -i
-            '-stimeout', '5000000',              // 5s (microseconds) for RTSP connect/read
+            #'-stimeout', '5000000',              // 5s (microseconds) for RTSP connect/read
             '-i', $camera->getLiveUri(),
             '-an', '-sn', '-dn',
-            '-skip_frame', 'nokey',              // only keyframes (avoids missing refs)
+            #'-skip_frame', 'nokey',              // only keyframes (avoids missing refs)
             '-frames:v', '1',
             $imagePath,
         ];
 
         $process = new Process($cmd);
-        $process->setTimeout(8);
+        $process->setTimeout(10);
         $process->run();
 
-        if(!$process->isSuccessful()){
+        if (!$process->isSuccessful()) {
+            $this->logger->error('ffmpeg failed', [
+                'code' => $process->getExitCode(),
+                'err' => $process->getErrorOutput(),
+                'out' => $process->getOutput(),
+                'cmd' => $process->getCommandLine(),
+            ]);
+
             return null;
         }
         return $imagePath;
