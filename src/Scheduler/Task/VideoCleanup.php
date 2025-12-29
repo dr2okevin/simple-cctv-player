@@ -12,7 +12,7 @@ use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 /**
  * This scheduler deletes old unprotected videos if the drive is almost full.
  */
-#[AsPeriodicTask(frequency: 600)]
+#[AsPeriodicTask(frequency: 120)]
 class VideoCleanup
 {
     public function __construct(private readonly CameraManager $cameraManager, private readonly VideoFileManager $videoFileManager, private readonly VideoRepository $videoRepository)
