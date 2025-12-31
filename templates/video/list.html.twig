@@ -92,7 +92,7 @@
                                poster="{{ path('video_thumbnail', {uid: video.uid}) }}"></video>
                     </td>
                     <td class="title">{{ video.title }}</td>
-                    <td>{{ video.cameraType.value }}</td>
+                    <td>{{ video.camera.title }}</td>
                     <td>{{ video.recordTime|date() }}<br>{{ video.duration }} sec</td>
                     <td>{{ (video.size / 1048576)|number_format(2) }} MB</td>
                     <td>
