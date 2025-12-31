@@ -7,6 +7,7 @@ use App\Entity\Video;
 use App\Repository\VideoRepository;
 use App\Service\CameraManager;
 use App\Service\VideoFileManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 
 /**
@@ -15,17 +16,19 @@ use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 #[AsPeriodicTask(frequency: 120)]
 class VideoCleanup
 {
-    public function __construct(private readonly CameraManager $cameraManager, private readonly VideoFileManager $videoFileManager, private readonly VideoRepository $videoRepository)
+    public function __construct(private readonly CameraManager $cameraManager, private readonly VideoFileManager $videoFileManager, private readonly VideoRepository $videoRepository, private readonly LoggerInterface $logger)
     {
     }
 
     public function __invoke(): void
     {
+        $this->logger->info('Starte Video-Cleanup Task...');
         $cameras = $this->cameraManager->getCameras();
         //We don't know if cameras share the same file system, so we check all.
         //And to not delete always from the same camera, we add some randomness to it
         shuffle($cameras);
         foreach ($cameras as $camera) {
+            $this->logger->info('Verarbeite Kamera: ' . $camera->getTitle());
             $this->deleteTooOldVideos($camera, 0);
             if ($this->isCameraFolderFull($camera)) {
                 $deleted = $this->deleteOldestVideos($camera, 1);
@@ -84,7 +87,7 @@ class VideoCleanup
             return 0;
         }
 
-        $AgeLimit = new \DateInterval($camera->getMaxAge() . ' h');
+        $AgeLimit = new \DateInterval('PT' . $camera->getMaxAge() . 'H');
         $maxAge = new \DateTime();
         $maxAge->sub($AgeLimit);
 
