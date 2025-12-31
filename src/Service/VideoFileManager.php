@@ -21,6 +21,7 @@ class VideoFileManager implements VideoFileManagerInterface
 
     /**
      * @inheritDoc
+     * @return Camera[]
      */
     public function getVideos(Camera $camera): array
     {
@@ -59,6 +60,12 @@ class VideoFileManager implements VideoFileManagerInterface
                 $this->videoRepository->save($videoObject);
                 $videoObjects[] = $videoObject;
             }
+        }
+
+        //add camera object in case some function needs that info
+        foreach ($videoObjects as $videoObject)
+        {
+            $videoObject->setCamera($camera);
         }
 
         return $videoObjects;

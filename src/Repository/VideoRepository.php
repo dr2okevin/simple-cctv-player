@@ -60,7 +60,11 @@ class VideoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function findAllUidsByCamera(Camera $camera)
+    /**
+     * @param Camera $camera
+     * @return int[]
+     */
+    public function findAllUidsByCamera(Camera $camera): array
     {
         $folder = $camera->getVideoFolder();
         $qb = $this->createQueryBuilder('v')

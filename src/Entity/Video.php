@@ -35,6 +35,8 @@ class Video
     #[ORM\Column(type: "integer", nullable: true)]
     protected ?int $duration = null;
 
+    private ?Camera $camera = null;
+
     public function __construct(string $path, string $title, CameraType $cameraType)
     {
         $this->setPath($path);
@@ -166,5 +168,15 @@ class Video
     public function setCameraType(CameraType $cameraType): void
     {
         $this->cameraType = $cameraType;
+    }
+
+    public function getCamera(): ?Camera
+    {
+        return $this->camera;
+    }
+
+    public function setCamera(Camera $camera): void
+    {
+        $this->camera = $camera;
     }
 }

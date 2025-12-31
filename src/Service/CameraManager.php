@@ -18,6 +18,8 @@ class CameraManager implements CameraManagerInterface
 
     /**
      * @inheritDoc
+     * @return Camera[]
+     * @throws \Exception
      */
     public function getCameras(): array
     {
