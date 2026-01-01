@@ -6,6 +6,7 @@ use App\Entity\Camera;
 use App\Enum\CameraType;
 use App\Repository\VideoRepository;
 use App\Service\CameraManager;
+use DateTimeInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -100,7 +101,13 @@ class CameraController extends AbstractController
         $camera = $cameras[$uid];
 
         $latestVideo = $this->videoRepository->findLatestVideoByCamera($camera);
-        $response = $this->json($latestVideo->getRecordTime());
+        $lastestRecordTime = $latestVideo->getRecordTime();
+        $responseArray = [
+            'dateTime' => $lastestRecordTime,
+            'unixtime' => $lastestRecordTime->getTimestamp(),
+            'ISO-8601' => $lastestRecordTime->format(DateTimeInterface::ATOM)
+        ];
+        $response = $this->json($responseArray);
         $response->headers->addCacheControlDirective('no-cache', true);
         return $response;
     }
