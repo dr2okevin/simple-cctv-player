@@ -84,7 +84,7 @@ class VideoRepository extends ServiceEntityRepository
             ->where('v.path LIKE :folder')
             ->setParameter('folder', $folder . '/%')
             ->setMaxResults(1)
-            ->orderBy('v.recordTime', 'ASC');
+            ->orderBy('v.recordTime', 'DESC');
 
         return $qb->getQuery()->getSingleResult();
     }
