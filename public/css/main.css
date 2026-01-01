@@ -101,7 +101,13 @@ ul.nav {
 }
 
 /* Der Button-Look selbst */
-ul.nav li a, nav.pagination a {
+ul.nav li a, nav.pagination a, nav.pagination .btn {
+    /* zurücksetzen mancher default für btn */
+    margin: unset;
+    height: unset;
+    line-height: unset;
+    vertical-align: unset;
+
     /* Layout & Größe */
     display: inline-block;
     padding: 8px 20px;
@@ -148,6 +154,7 @@ nav.pagination {
     width: 100%;
     margin-top: 10px;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 .logo {
@@ -168,6 +175,10 @@ nav.pagination {
     line-height: 50px;
     vertical-align: middle;
     box-shadow: 0 0 1em 0.5em rgba(55, 55, 55, 0.45);
+}
+
+.disabled, *:disabled {
+    filter: grayscale(100);
 }
 
 .btn:hover {

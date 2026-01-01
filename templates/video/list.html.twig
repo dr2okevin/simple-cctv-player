@@ -115,10 +115,44 @@
                 </tr>
             {% endfor %}
         </table>
+        {# Konfiguration: Wie viele Seiten um die aktuelle Seite herum angezeigt werden sollen #}
+        {% set delta = 2 %}
+
         <nav class="pagination">
-            {% for p in 1..pages %}
-                <a href="{{ path('list_videos', app.request.query.all|merge({page: p})) }}">{{ p }}</a>
+            {% if page > 1 %}
+                <a href="{{ path('list_videos', app.request.query.all|merge({page: page - 1})) }}">&laquo; Zurück</a>
+            {% else %}
+                <span class="btn disabled">&laquo; Zurück</span>
+            {% endif %}
+
+            <a href="{{ path('list_videos', app.request.query.all|merge({page: 1})) }}"
+               class="{{ page == 1 ? 'active' : '' }}">1</a>
+
+            {% if page - delta > 2 %}
+                <span class="ellipsis">...</span>
+            {% endif %}
+
+            {% for p in 2..pages-1 %}
+                {% if p >= page - delta and p <= page + delta %}
+                    <a href="{{ path('list_videos', app.request.query.all|merge({page: p})) }}"
+                       class="{{ p == page ? 'active' : '' }}">{{ p }}</a>
+                {% endif %}
             {% endfor %}
+
+            {% if page + delta < pages - 1 %}
+                <span class="ellipsis">...</span>
+            {% endif %}
+
+            {% if pages > 1 %}
+                <a href="{{ path('list_videos', app.request.query.all|merge({page: pages})) }}"
+                   class="{{ page == pages ? 'active' : '' }}">{{ pages }}</a>
+            {% endif %}
+
+            {% if page < pages %}
+                <a href="{{ path('list_videos', app.request.query.all|merge({page: page + 1})) }}">Vor &raquo;</a>
+            {% else %}
+                <span class="btn disabled">Vor &raquo;</span>
+            {% endif %}
         </nav>
     </div>
 {% endblock %}
