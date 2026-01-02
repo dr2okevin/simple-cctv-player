@@ -121,7 +121,7 @@ class VideoFileManager implements VideoFileManagerInterface
 
         //Fallback if regex didn't work
         $fileTime = filectime($path);
-        return new \DateTime(@$fileTime);
+        return new \DateTime('@'.$fileTime);
     }
 
     public function calculateDuration(Video $video): int
