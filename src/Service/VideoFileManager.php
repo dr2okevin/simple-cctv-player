@@ -120,7 +120,7 @@ class VideoFileManager implements VideoFileManagerInterface
         }
 
         //Fallback if regex didn't work
-        $fileTime = filectime($path);
+        $fileTime = filemtime($path);
         return new \DateTime('@'.$fileTime);
     }
 
