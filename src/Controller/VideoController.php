@@ -59,26 +59,31 @@ class VideoController extends AbstractController
         }
 
         $cameras = $this->cameraManager->getCameras();
-        $videos = [];
-        foreach ($cameras as $camera) {
-            $videos = array_merge($videos, $this->videoFileManager->getVideos($camera));
-        }
-        usort($videos, function ($a, $b){
-            return $b->getRecordTime()->getTimestamp() - $a->getRecordTime()->getTimestamp();
-        });
-
-        // Pagination
         $page = max(1, $this->request->query->getInt('page', 1));
         $perPage = 10;
 
-        $total = count($videos);
-        $pages = (int) max(1, ceil($total / $perPage));
-        $page = min($page, $pages);
+        $paginator = $this->videoRepository->findAllPaginated($page, $perPage);
 
-        $videos = array_slice($videos, ($page - 1) * $perPage, $perPage);
+        $total = count($paginator);
+        $pages = (int)max(1, ceil($total / $perPage));
+
+        // redirect to last page if page number is too big
+        if ($page > $pages && $pages > 0) {
+            return $this->redirectToRoute('list_videos', ['page' => $pages]);
+        }
+
+        foreach ($paginator as $video) {
+            foreach ($cameras as $camera) {
+                // check if video path fits to camera path
+                if (str_starts_with($video->getPath(), $camera->getVideoFolder())) {
+                    $video->setCamera($camera);
+                    break;
+                }
+            }
+        }
 
         return $this->render('video/list.html.twig', [
-            'videos' => $videos,
+            'videos' => $paginator,
             'page' => $page,
             'pages' => $pages,
             'total' => $total,

@@ -6,6 +6,7 @@ use App\Entity\Camera;
 use App\Entity\Video;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -89,5 +90,15 @@ class VideoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getSingleResult();
     }
 
+    public function findAllPaginated(int $page, int $limit): Paginator
+    {
+        $query = $this->createQueryBuilder('v')
+            ->orderBy('v.recordTime', 'DESC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery();
+
+        return new Paginator($query);
+    }
 
 }
