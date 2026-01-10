@@ -6,6 +6,7 @@ use App\Entity\Camera;
 use App\Entity\Video;
 use App\Enum\CameraType;
 use App\Repository\VideoRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 class VideoFileManager implements VideoFileManagerInterface
@@ -15,7 +16,7 @@ class VideoFileManager implements VideoFileManagerInterface
 
     protected string $thumbnailExtension = 'jpg';
 
-    public function __construct(protected VideoRepository $videoRepository, protected KernelInterface $kernel)
+    public function __construct(protected VideoRepository $videoRepository, protected KernelInterface $kernel, private readonly LoggerInterface $logger)
     {
     }
 
@@ -42,8 +43,13 @@ class VideoFileManager implements VideoFileManagerInterface
             $filenameArray = pathinfo($file);
             if (isset($filenameArray['extension']) && in_array($filenameArray['extension'], $this->videoExtensions)) {
                 $fullPath = $folder . '/' . $file;
+                clearstatcache(false, $fullPath);
+                if (time() - filemtime($fullPath) < 50) {
+                    $this->logger->debug('video ' . $fullPath . ' is too new, might be still in write process. Ignore for now to avoid wrong meta data');
+                    continue;
+                }
                 $uid = Video::calculateUid($fullPath);
-                if(in_array($uid, $existingUids)) {
+                if (in_array($uid, $existingUids)) {
                     $existingVideoObject = $this->videoRepository->findOneByUid($uid);
                     if (isset($existingVideoObject) && $existingVideoObject instanceof Video) {
                         //We found a video object in the Database
@@ -63,8 +69,7 @@ class VideoFileManager implements VideoFileManagerInterface
         }
 
         //add camera object in case some function needs that info
-        foreach ($videoObjects as $videoObject)
-        {
+        foreach ($videoObjects as $videoObject) {
             $videoObject->setCamera($camera);
         }
 
@@ -121,7 +126,7 @@ class VideoFileManager implements VideoFileManagerInterface
 
         //Fallback if regex didn't work
         $fileTime = filemtime($path);
-        return new \DateTime('@'.$fileTime);
+        return new \DateTime('@' . $fileTime);
     }
 
     public function calculateDuration(Video $video): int
@@ -133,6 +138,7 @@ class VideoFileManager implements VideoFileManagerInterface
             if ($duration !== false && is_numeric($duration)) {
                 return (int)round($duration, 0);
             }
+            $this->logger->error('Command' . $command . 'returned' . (string)$duration);
         }
 
         return 0;
@@ -181,27 +187,32 @@ class VideoFileManager implements VideoFileManagerInterface
         //Abort if the Video doesn't exists.
         $video = $this->findVideoByUid($uid);
         if (!$video instanceof Video) {
+            $this->logger->warning('video with the uid ' . $uid . ' can\'t be deleted because it dosen\'t exist');
             return false;
         }
 
         //Abort if the video is protected
         if ($video->isProtected()) {
+            $this->logger->warning('video with the uid ' . $uid . ' can\'t be deleted because it is protected');
             return false;
         }
 
         //Delete the original file
         $videoPath = $video->getPath();
         if (file_exists($videoPath) && !unlink($videoPath)) {
+            $this->logger->error('video with the path ' . $videoPath . ' can\'t be deleted');
             return false;
         }
 
         //Delte Thumbnail
         $thumbnailPath = $this->getThumbnailPath($uid);
         if (file_exists($thumbnailPath) && !unlink($thumbnailPath)) {
+            $this->logger->error('thumbnail with the path ' . $thumbnailPath . ' can\'t be deleted');
             return false;
         }
 
         $this->videoRepository->remove($video);
+        $this->logger->info('Video ' . $uid . ' has been deleted');
         return true;
     }
 }
