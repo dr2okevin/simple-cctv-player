@@ -181,17 +181,13 @@ class VideoFileManager implements VideoFileManagerInterface
         return $this->generateThumbnailForVideo($video);
     }
 
-    public function generateMissingThumbnails(int $limit = 5): int
+    public function generateMissingThumbnails(): int
     {
-        if ($limit <= 0) {
-            return 0;
-        }
-
         $offset = 0;
         $batchSize = 50;
         $generated = 0;
 
-        while ($generated < $limit) {
+        while (true) {
             $videos = $this->videoRepository->findBy([], ['recordTime' => 'DESC'], $batchSize, $offset);
             if ($videos === []) {
                 break;
@@ -213,10 +209,6 @@ class VideoFileManager implements VideoFileManagerInterface
 
                 if ($this->generateThumbnailForVideo($video)) {
                     ++$generated;
-                }
-
-                if ($generated >= $limit) {
-                    break;
                 }
             }
 
