@@ -165,21 +165,133 @@ class VideoFileManager implements VideoFileManagerInterface
     {
         $path = $this->getThumbnailPath($uid);
         if (!file_exists($path)) {
-            $video = $this->videoRepository->findOneByUid($uid);
-            if (!$video instanceof Video) {
-                return null;
-            }
-
-            $halfVideoTime = (int)round($video->getDuration() / 2, 0);
-            $command = 'ffmpeg -i ' . escapeshellarg(realpath($video->getPath())) . ' -ss ' . $halfVideoTime . ' -frames:v 1 ' . escapeshellarg($path);
-            exec($command, $output, $returnVar);
-            if ($returnVar !== 0) {
-                return null;
-            }
-
+            return null;
         }
 
         return $path;
+    }
+
+    public function generateThumbnail(string $uid): bool
+    {
+        $video = $this->videoRepository->findOneByUid($uid);
+        if (!$video instanceof Video) {
+            return false;
+        }
+
+        return $this->generateThumbnailForVideo($video);
+    }
+
+    public function generateMissingThumbnails(): int
+    {
+        $offset = 0;
+        $batchSize = 50;
+        $generated = 0;
+
+        while (true) {
+            $videos = $this->videoRepository->findBy([], ['recordTime' => 'DESC'], $batchSize, $offset);
+            if ($videos === []) {
+                break;
+            }
+
+            foreach ($videos as $video) {
+                if (!$video instanceof Video) {
+                    continue;
+                }
+
+                if (!$this->isThumbnailGenerationLoadAllowed()) {
+                    $this->logger->info('Thumbnail generation stopped due to high system load.');
+                    return $generated;
+                }
+
+                if (file_exists($this->getThumbnailPath($video->getUid()))) {
+                    continue;
+                }
+
+                if ($this->generateThumbnailForVideo($video)) {
+                    ++$generated;
+                }
+            }
+
+            $offset += $batchSize;
+        }
+
+        return $generated;
+    }
+
+    private function generateThumbnailForVideo(Video $video): bool
+    {
+        $path = $this->getThumbnailPath($video->getUid());
+        if (file_exists($path)) {
+            return true;
+        }
+
+        $generationLock = $this->acquireThumbnailGenerationLock();
+        if ($generationLock === null) {
+            $this->logger->info('No free thumbnail generation slot available. Skipping for now.');
+            return false;
+        }
+
+        $realPath = realpath($video->getPath());
+        if ($realPath === false) {
+            $this->releaseThumbnailGenerationLock($generationLock);
+            $this->logger->warning('Could not resolve real path for video ' . $video->getUid());
+            return false;
+        }
+
+        $halfVideoTime = (int)round($video->getDuration() / 2, 0);
+        $command = 'ffmpeg -i ' . escapeshellarg($realPath) . ' -ss ' . $halfVideoTime . ' -frames:v 1 ' . escapeshellarg($path);
+        exec($command, $output, $returnVar);
+        $this->releaseThumbnailGenerationLock($generationLock);
+        if ($returnVar !== 0) {
+            $this->logger->warning('Thumbnail generation failed for video ' . $video->getUid());
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isThumbnailGenerationLoadAllowed(): bool
+    {
+        $load = sys_getloadavg();
+        if (!is_array($load) || count($load) < 2) {
+            return false;
+        }
+
+        return $load[0] < 2 && $load[1] < 3;
+    }
+
+    private function acquireThumbnailGenerationLock(): mixed
+    {
+        $lockDir = $this->kernel->getProjectDir() . '/var/thumbnail_generation_locks/';
+        if (!is_dir($lockDir)) {
+            mkdir($lockDir, 0774, true);
+        }
+
+        for ($slot = 0; $slot < 2; ++$slot) {
+            $lockFile = $lockDir . 'slot_' . $slot . '.lock';
+            $lockHandle = fopen($lockFile, 'c');
+            if ($lockHandle === false) {
+                continue;
+            }
+
+            if (flock($lockHandle, LOCK_EX | LOCK_NB)) {
+                return $lockHandle;
+            }
+
+            fclose($lockHandle);
+        }
+
+        return null;
+    }
+
+    private function releaseThumbnailGenerationLock(mixed $lockHandle): void
+    {
+        if (!is_resource($lockHandle)) {
+            return;
+        }
+
+        flock($lockHandle, LOCK_UN);
+        fclose($lockHandle);
     }
 
     public function deleteVideo(string $uid): bool
